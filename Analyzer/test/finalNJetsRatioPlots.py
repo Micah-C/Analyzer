@@ -9,7 +9,8 @@ ROOT.gStyle.SetFrameLineWidth(2)
 
 usage = "usage: %prog [options]"
 parser = argparse.ArgumentParser(usage)
-parser.add_argument("--inputDir", dest="inputDir", help="Path to input", default="NULL", type=str) 
+parser.add_argument("--inputDir", dest="inputDir", help="Path to input"  , default="NULL", type=str) 
+parser.add_argument("--year"    , dest="year"    , help="Year to process", default="NULL", type=str) 
 
 arg = parser.parse_args()
 
@@ -69,7 +70,7 @@ if __name__ == '__main__':
     if arg.inputDir == "NULL": quit()
     stub = arg.inputDir.split("condor/")[-1]
 
-    inRootFile = arg.inputDir + "/2017_MC.root"
+    inRootFile = arg.inputDir + "/%s_MC.root"%(arg.year)
        
     outpath = "./plots/%s/"%(stub)
     if not os.path.exists(outpath): os.makedirs(outpath)

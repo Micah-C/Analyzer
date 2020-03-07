@@ -98,6 +98,7 @@ void Analyze1Lep::Loop(NTupleReader& tr, double, int maxevents, bool)
         const auto& filetag                   = tr.getVar<std::string>("filetag");
         const auto& Jets                      = tr.getVec<TLorentzVector>("Jets");
         const auto& GoodJets_pt30             = tr.getVec<bool>("GoodJets_pt30");
+        const auto& NonIsoMuonJets_pt30       = tr.getVec<bool>("NonIsoMuonJets_pt30");
         const auto& NJet                      = tr.getVar<int>("NJets");
         const auto& NGoodJets_pt30            = tr.getVar<int>("NGoodJets_pt30");
         const auto& NNonIsoMuonJets_pt30      = tr.getVar<int>("NNonIsoMuonJets_pt30");
@@ -105,6 +106,9 @@ void Analyze1Lep::Loop(NTupleReader& tr, double, int maxevents, bool)
         const auto& NGoodMuons                = tr.getVar<int>("NGoodMuons");
         const auto& NGoodElectrons            = tr.getVar<int>("NGoodElectrons");
         const auto& NGoodLeptons              = tr.getVar<int>("NGoodLeptons");
+        const auto& NVtx                      = tr.getVar<int>("NVtx");
+        //const auto& TrueNumInteractions       = tr.getVar<double>("TrueNumInteractions");
+        const auto& fixedGridRhoFastjetAll    = tr.getVar<double>("fixedGridRhoFastjetAll");
         const auto& GoodLeptons               = tr.getVec<std::pair<std::string, TLorentzVector>>("GoodLeptons");
         const auto& GoodNonIsoMuons           = tr.getVec<std::pair<std::string, TLorentzVector>>("GoodNonIsoMuons");
         const auto& HT_trigger_pt30           = tr.getVar<double>("HT_trigger_pt30");
@@ -156,7 +160,11 @@ void Analyze1Lep::Loop(NTupleReader& tr, double, int maxevents, bool)
         // ------------------------
         double weight=1.0, weightNoHT=1.0, weightQCDCR=1.0, weightNoBTag=1.0;
         double eventweight=1.0, leptonweight=1.0, bTagWeight=1.0, prefiringScaleFactor=1.0, pileupWeight=1.0, htDerivedweight=1.0;
-        double weightNoLepton=1.0;
+        double prefiringScaleFactorUp=1.0, prefiringScaleFactorDown=1.0;
+        double weightNoLepton=1.0, weightNoPU=1.0, weightPUdown=1.0, weightPUup=1.0, pileupWeightUp=1.0, pileupWeightDown=1.0;
+        double weightNoPrefire=1.0, weightPrefireDown=1.0, weightPrefireUp=1.0;
+        double isrUp=1.0, isrDown=1.0, fsrUp=1.0, fsrDown=1.0;
+        double weightISRUp=1.0, weightISRDown=1.0, weightFSRUp=1.0, weightFSRDown=1.0;
         if(runtype == "MC")
         {
             // Define Lumi weight
@@ -170,14 +178,33 @@ void Analyze1Lep::Loop(NTupleReader& tr, double, int maxevents, bool)
             leptonweight = eleLepWeight*muLepWeight;
             
             pileupWeight = tr.getVar<double>("puWeightCorr");
+            pileupWeightUp = tr.getVar<double>("puSysUpCorr");
+            pileupWeightDown = tr.getVar<double>("puSysDownCorr");
             bTagWeight   = tr.getVar<double>("bTagSF_EventWeightSimple_Central");
             htDerivedweight = tr.getVar<double>("htDerivedweight");
             prefiringScaleFactor = tr.getVar<double>("prefiringScaleFactor");
+            prefiringScaleFactorUp = tr.getVar<double>("prefiringScaleFactorUp");
+            prefiringScaleFactorDown = tr.getVar<double>("prefiringScaleFactorDown");
+            fsrUp = tr.getVar<double>("PSweight_FSRUp");
+            fsrDown = tr.getVar<double>("PSweight_FSRDown");
+            isrUp = tr.getVar<double>("PSweight_ISRUp_2");
+            isrDown = tr.getVar<double>("PSweight_ISRDown_2");
             
             weightQCDCR *= eventweight*muNonIso*prefiringScaleFactor*pileupWeight;
             weightNoHT *= eventweight*leptonweight*bTagWeight*prefiringScaleFactor*pileupWeight;
             weightNoLepton *= eventweight*bTagWeight*prefiringScaleFactor*pileupWeight*htDerivedweight;
             weightNoBTag *= eventweight*leptonweight*prefiringScaleFactor*pileupWeight*htDerivedweight;
+            weightNoPU *= eventweight*leptonweight*bTagWeight*prefiringScaleFactor*htDerivedweight;
+            weightPUdown *= eventweight*leptonweight*bTagWeight*prefiringScaleFactor*htDerivedweight*pileupWeightDown;
+            weightPUup *= eventweight*leptonweight*bTagWeight*prefiringScaleFactor*htDerivedweight*pileupWeightUp;
+            weightNoPrefire *= eventweight*leptonweight*bTagWeight*pileupWeight*htDerivedweight;
+            weightPrefireDown *= eventweight*leptonweight*bTagWeight*prefiringScaleFactorDown*htDerivedweight*pileupWeight;
+            weightPrefireUp *= eventweight*leptonweight*bTagWeight*prefiringScaleFactorUp*htDerivedweight*pileupWeight;
+            weightISRUp *= eventweight*leptonweight*bTagWeight*prefiringScaleFactor*pileupWeight*htDerivedweight*isrUp;
+            weightISRDown *= eventweight*leptonweight*bTagWeight*prefiringScaleFactor*pileupWeight*htDerivedweight*isrDown;
+            weightFSRUp *= eventweight*leptonweight*bTagWeight*prefiringScaleFactor*pileupWeight*htDerivedweight*fsrUp;
+            weightFSRDown *= eventweight*leptonweight*bTagWeight*prefiringScaleFactor*pileupWeight*htDerivedweight*fsrDown;
+
             weight *= eventweight*leptonweight*bTagWeight*prefiringScaleFactor*pileupWeight*htDerivedweight;
         }
 
@@ -278,107 +305,132 @@ void Analyze1Lep::Loop(NTupleReader& tr, double, int maxevents, bool)
         // -------------------                        
         const std::map<std::string, bool> cut_map_1l 
         {
-            {""                                      , pass_general                                                                             },
-            {"_1l_HT300"                             , pass_general && pass_1l && pass_ht                                                       },
-            {"_1l_HT300_ge7j"                        , pass_general && pass_1l && pass_ht && pass_njet_pt30  && JetID                           },
-            {"_1l_HT300_ge1b"                        , pass_general && pass_1l && pass_ht && pass_1btag_pt30 && JetID                           },
-            {"_1l_HT300_ge2b"                        , pass_general && pass_1l && pass_ht && pass_2btag_pt30 && JetID                           },
-            {"_1l_HT300_ge7j_ge1b"                   , pass_general && pass_1l && pass_ht && pass_njet_pt30  && pass_1btag_pt30 && JetID        },
-            {"_1l_HT300_ge1b_Mbl"                    , pass_general && passBaseline1l_AllJets                                                   },
-            {"_1l_HT300_ge4j_ge1b_Mbl"               , pass_general && passBaseline1l_AllJets && NGoodJets_pt30 >= 4                            },
-            {"_1e_HT300_ge4j_ge1b_Mbl"               , pass_general && passBaseline1l_AllJets && NGoodJets_pt30 >= 4 && pass_1e                 },
-            {"_1m_HT300_ge4j_ge1b_Mbl"               , pass_general && passBaseline1l_AllJets && NGoodJets_pt30 >= 4 && pass_1m                 },
-            {"_1l_HT300_ge7j_ge1b_Mbl"               , pass_general && passBaseline1l_Good                                                      },                         
-            {"_1e_HT300_ge7j_ge1b_Mbl"               , pass_general && passBaseline1l_Good && pass_1e                                           },                         
-            {"_1m_HT300_ge7j_ge1b_Mbl"               , pass_general && passBaseline1l_Good && pass_1m                                           },   
-            {"_1l_HT300_ge7j_ge1b_Mbl_posWeight"     , pass_general && passBaseline1l_Good && weight >  0.0                                     },                         
-            {"_1l_HT300_ge7j_ge1b_Mbl_negWeight"     , pass_general && passBaseline1l_Good && weight <= 0.0                                     },                         
-            {"_1l_HT300_ge7j_ge1b_Mbl_noHTWeight"    , pass_general && passBaseline1l_Good                                                      }, 
-            {"_1l_HT300_ge7j_ge1b_Mbl_noLepWeight"   , pass_general && passBaseline1l_Good                                                      },                         
-            {"_1l_HT300_ge7j_ge1b_Mbl_noBTagWeight"  , pass_general && passBaseline1l_Good                                                      },                         
-            {"_1l_HT300_ge7j_ge2b_Mbl"               , pass_general && passBaseline1l_Good && pass_2btag_pt30                                   },
-            {"_1l_HT300_ge7j_ge1b_Mbl_lBarrel"       , pass_general && passBaseline1l_Good && pass_lBarrel                                      },
-            {"_1e_HT300_ge7j_ge1b_Mbl_lBarrel"       , pass_general && passBaseline1l_Good && pass_lBarrel && pass_1e                           },
-            {"_1m_HT300_ge7j_ge1b_Mbl_lBarrel"       , pass_general && passBaseline1l_Good && pass_lBarrel && pass_1m                           },
-            {"_1l_HT300_ge7j_ge1b_Mbl_lEndCap"       , pass_general && passBaseline1l_Good && !pass_lBarrel                                     },
-            {"_1e_HT300_ge7j_ge1b_Mbl_lEndCap"       , pass_general && passBaseline1l_Good && !pass_lBarrel && pass_1e                          },
-            {"_1m_HT300_ge7j_ge1b_Mbl_lEndCap"       , pass_general && passBaseline1l_Good && !pass_lBarrel && pass_1m                          },
-            {"_1l_HT300_ge7j_ge1b_Mbl_d1"            , pass_general && passBaseline1l_Good && deepESM_bin1                                      },                         
-            {"_1l_HT300_ge7j_ge1b_Mbl_d2"            , pass_general && passBaseline1l_Good && deepESM_bin2                                      },                         
-            {"_1l_HT300_ge7j_ge1b_Mbl_d3"            , pass_general && passBaseline1l_Good && deepESM_bin3                                      },                         
-            {"_1l_HT300_ge7j_ge1b_Mbl_d4"            , pass_general && passBaseline1l_Good && deepESM_bin4                                      },                         
-            {"_1l_HT300_1j_ge1b_Mbl"                 , pass_general && passBaseline1l_AllJets && NGoodJets_pt30 == 1                            },
-            {"_1l_HT300_2j_ge1b_Mbl"                 , pass_general && passBaseline1l_AllJets && NGoodJets_pt30 == 2                            },
-            {"_1l_HT300_3j_ge1b_Mbl"                 , pass_general && passBaseline1l_AllJets && NGoodJets_pt30 == 3                            },
-            {"_1l_HT300_4j_ge1b_Mbl"                 , pass_general && passBaseline1l_AllJets && NGoodJets_pt30 == 4                            },
-            {"_1l_HT300_5j_ge1b_Mbl"                 , pass_general && passBaseline1l_AllJets && NGoodJets_pt30 == 5                            },
-            {"_1l_HT300_6j_ge1b_Mbl"                 , pass_general && passBaseline1l_AllJets && NGoodJets_pt30 == 6                            },
-            {"_1l_HT300_7j_ge1b_Mbl"                 , pass_general && passBaseline1l_Good && NGoodJets_pt30 == 7                               },
-            {"_1l_HT300_8j_ge1b_Mbl"                 , pass_general && passBaseline1l_Good && NGoodJets_pt30 == 8                               },
-            {"_1l_HT300_9j_ge1b_Mbl"                 , pass_general && passBaseline1l_Good && NGoodJets_pt30 == 9                               },
-            {"_1l_HT300_10j_ge1b_Mbl"                , pass_general && passBaseline1l_Good && NGoodJets_pt30 == 10                              },
-            {"_1l_HT300_11j_ge1b_Mbl"                , pass_general && passBaseline1l_Good && NGoodJets_pt30 == 11                              },
-            {"_1l_HT300_12j_ge1b_Mbl"                , pass_general && passBaseline1l_Good && NGoodJets_pt30 == 12                              },
-            {"_1l_HT300_13j_ge1b_Mbl"                , pass_general && passBaseline1l_Good && NGoodJets_pt30 == 13                              },
-            {"_1l_HT300_14j_ge1b_Mbl"                , pass_general && passBaseline1l_Good && NGoodJets_pt30 == 14                              },
-            {"_1l_HT300_15j_ge1b_Mbl"                , pass_general && passBaseline1l_Good && NGoodJets_pt30 == 15                              },
-            {"_1l_HT300_5j_ge1b_Mbl_htCorr"          , pass_general && passBaseline1l_AllJets && NGoodJets_pt30 == 5                            },
-            {"_1l_HT300_6j_ge1b_Mbl_htCorr"          , pass_general && passBaseline1l_AllJets && NGoodJets_pt30 == 6                            },
-            {"_1l_HT300_7j_ge1b_Mbl_htCorr"          , pass_general && passBaseline1l_Good && NGoodJets_pt30 == 7                               },
-            {"_1l_HT300_8j_ge1b_Mbl_htCorr"          , pass_general && passBaseline1l_Good && NGoodJets_pt30 == 8                               },
-            {"_1l_HT300_ge7j_ge1b_Mbl_htCorr"        , pass_general && passBaseline1l_Good                                                      },
-
-            {"_1l_0b_ge300ht_50to110mt_ge30MET"      , pass_general && passBaseline1l_WCR                                                       },
-            {"_1l_0b_ge300ht_50to110mt_ge30MET_even" , pass_general && passBaseline1l_WCR && evenEvent                                          },
-            {"_1l_0b_ge300ht_50to110mt_ge30MET_odd"  , pass_general && passBaseline1l_WCR && !evenEvent                                         },
-            {"_1e_1m_ge2b_le5j"                      , pass_general && passBaseline1e1m                                                         },
-            {"_passQCDCR"                            , passBaseline1l_NonIsoMuon                                                                },
+            {""                                          , pass_general                                                                             },
+            {"_1l_HT300"                                 , pass_general && pass_1l && pass_ht                                                       },
+            {"_1l_HT300_ge7j"                            , pass_general && pass_1l && pass_ht && pass_njet_pt30  && JetID                           },
+            {"_1l_HT300_ge1b"                            , pass_general && pass_1l && pass_ht && pass_1btag_pt30 && JetID                           },
+            {"_1l_HT300_ge2b"                            , pass_general && pass_1l && pass_ht && pass_2btag_pt30 && JetID                           },
+            {"_1l_HT300_ge7j_ge1b"                       , pass_general && pass_1l && pass_ht && pass_njet_pt30  && pass_1btag_pt30 && JetID        },
+            {"_1l_HT300_ge1b_Mbl"                        , pass_general && passBaseline1l_AllJets                                                   },
+            {"_1l_HT300_ge3j_ge1b_Mbl"                   , pass_general && passBaseline1l_AllJets && NGoodJets_pt30 >= 3                            },
+            {"_1l_HT300_ge3j_ge1b_Mbl_noPuWeight"        , pass_general && passBaseline1l_AllJets && NGoodJets_pt30 >= 3                            },
+            {"_1l_HT300_ge3j_ge1b_Mbl_puWeightUp"        , pass_general && passBaseline1l_AllJets && NGoodJets_pt30 >= 3                            },
+            {"_1l_HT300_ge3j_ge1b_Mbl_puWeightDown"      , pass_general && passBaseline1l_AllJets && NGoodJets_pt30 >= 3                            },
+            {"_1e_HT300_ge4j_ge1b_Mbl"                   , pass_general && passBaseline1l_AllJets && NGoodJets_pt30 >= 4 && pass_1e                 },
+            {"_1m_HT300_ge4j_ge1b_Mbl"                   , pass_general && passBaseline1l_AllJets && NGoodJets_pt30 >= 4 && pass_1m                 },
+            {"_1l_HT300_ge7j_ge1b_Mbl"                   , pass_general && passBaseline1l_Good                                                      },                         
+            {"_1e_HT300_ge7j_ge1b_Mbl"                   , pass_general && passBaseline1l_Good && pass_1e                                           },                         
+            {"_1m_HT300_ge7j_ge1b_Mbl"                   , pass_general && passBaseline1l_Good && pass_1m                                           },   
+            {"_1l_HT300_ge7j_ge1b_Mbl_posWeight"         , pass_general && passBaseline1l_Good && weight >  0.0                                     },                         
+            {"_1l_HT300_ge7j_ge1b_Mbl_negWeight"         , pass_general && passBaseline1l_Good && weight <= 0.0                                     },                         
+            {"_1l_HT300_ge7j_ge1b_Mbl_noHTWeight"        , pass_general && passBaseline1l_Good                                                      }, 
+            {"_1l_HT300_ge7j_ge1b_Mbl_noLepWeight"       , pass_general && passBaseline1l_Good                                                      },                         
+            {"_1l_HT300_ge7j_ge1b_Mbl_noBTagWeight"      , pass_general && passBaseline1l_Good                                                      },                         
+            {"_1l_HT300_ge7j_ge1b_Mbl_noPuWeight"        , pass_general && passBaseline1l_Good                                                      },                         
+            {"_1l_HT300_ge7j_ge1b_Mbl_puWeightUp"        , pass_general && passBaseline1l_Good                                                      },                         
+            {"_1l_HT300_ge7j_ge1b_Mbl_puWeightDown"      , pass_general && passBaseline1l_Good                                                      },                         
+            {"_1l_HT300_ge7j_ge1b_Mbl_noPrefireWeight"   , pass_general && passBaseline1l_Good                                                      },                         
+            {"_1l_HT300_ge7j_ge1b_Mbl_prefireWeightUp"   , pass_general && passBaseline1l_Good                                                      },                         
+            {"_1l_HT300_ge7j_ge1b_Mbl_prefireWeightDown" , pass_general && passBaseline1l_Good                                                      },                         
+            {"_1l_HT300_ge7j_ge1b_Mbl_fsrDown"           , pass_general && passBaseline1l_Good                                                      },                         
+            {"_1l_HT300_ge7j_ge1b_Mbl_fsrUp"             , pass_general && passBaseline1l_Good                                                      },                         
+            {"_1l_HT300_ge7j_ge1b_Mbl_isrDown"           , pass_general && passBaseline1l_Good                                                      },                         
+            {"_1l_HT300_ge7j_ge1b_Mbl_isrUp"             , pass_general && passBaseline1l_Good                                                      },                         
+            {"_1l_HT300_ge7j_ge2b_Mbl"                   , pass_general && passBaseline1l_Good && pass_2btag_pt30                                   },
+            {"_1l_HT300_ge7j_ge1b_Mbl_lBarrel"           , pass_general && passBaseline1l_Good && pass_lBarrel                                      },
+            {"_1e_HT300_ge7j_ge1b_Mbl_lBarrel"           , pass_general && passBaseline1l_Good && pass_lBarrel && pass_1e                           },
+            {"_1m_HT300_ge7j_ge1b_Mbl_lBarrel"           , pass_general && passBaseline1l_Good && pass_lBarrel && pass_1m                           },
+            {"_1l_HT300_ge7j_ge1b_Mbl_lEndCap"           , pass_general && passBaseline1l_Good && !pass_lBarrel                                     },
+            {"_1e_HT300_ge7j_ge1b_Mbl_lEndCap"           , pass_general && passBaseline1l_Good && !pass_lBarrel && pass_1e                          },
+            {"_1m_HT300_ge7j_ge1b_Mbl_lEndCap"           , pass_general && passBaseline1l_Good && !pass_lBarrel && pass_1m                          },
+            {"_1l_HT300_ge7j_ge1b_Mbl_d1"                , pass_general && passBaseline1l_Good && deepESM_bin1                                      },                         
+            {"_1l_HT300_ge7j_ge1b_Mbl_d2"                , pass_general && passBaseline1l_Good && deepESM_bin2                                      },                         
+            {"_1l_HT300_ge7j_ge1b_Mbl_d3"                , pass_general && passBaseline1l_Good && deepESM_bin3                                      },                         
+            {"_1l_HT300_ge7j_ge1b_Mbl_d4"                , pass_general && passBaseline1l_Good && deepESM_bin4                                      },                         
+            {"_1l_HT300_1j_ge1b_Mbl"                     , pass_general && passBaseline1l_AllJets && NGoodJets_pt30 == 1                            },
+            {"_1l_HT300_2j_ge1b_Mbl"                     , pass_general && passBaseline1l_AllJets && NGoodJets_pt30 == 2                            },
+            {"_1l_HT300_3j_ge1b_Mbl"                     , pass_general && passBaseline1l_AllJets && NGoodJets_pt30 == 3                            },
+            {"_1l_HT300_4j_ge1b_Mbl"                     , pass_general && passBaseline1l_AllJets && NGoodJets_pt30 == 4                            },
+            {"_1l_HT300_5j_ge1b_Mbl"                     , pass_general && passBaseline1l_AllJets && NGoodJets_pt30 == 5                            },
+            {"_1l_HT300_6j_ge1b_Mbl"                     , pass_general && passBaseline1l_AllJets && NGoodJets_pt30 == 6                            },
+            {"_1l_HT300_7j_ge1b_Mbl"                     , pass_general && passBaseline1l_Good && NGoodJets_pt30 == 7                               },
+            {"_1l_HT300_8j_ge1b_Mbl"                     , pass_general && passBaseline1l_Good && NGoodJets_pt30 == 8                               },
+            {"_1l_HT300_9j_ge1b_Mbl"                     , pass_general && passBaseline1l_Good && NGoodJets_pt30 == 9                               },
+            {"_1l_HT300_10j_ge1b_Mbl"                    , pass_general && passBaseline1l_Good && NGoodJets_pt30 == 10                              },
+            {"_1l_HT300_11j_ge1b_Mbl"                    , pass_general && passBaseline1l_Good && NGoodJets_pt30 == 11                              },
+            {"_1l_HT300_12j_ge1b_Mbl"                    , pass_general && passBaseline1l_Good && NGoodJets_pt30 == 12                              },
+            {"_1l_HT300_13j_ge1b_Mbl"                    , pass_general && passBaseline1l_Good && NGoodJets_pt30 == 13                              },
+            {"_1l_HT300_14j_ge1b_Mbl"                    , pass_general && passBaseline1l_Good && NGoodJets_pt30 == 14                              },
+            {"_1l_HT300_15j_ge1b_Mbl"                    , pass_general && passBaseline1l_Good && NGoodJets_pt30 == 15                              },
+            {"_1l_HT300_5j_ge1b_Mbl_htCorr"              , pass_general && passBaseline1l_AllJets && NGoodJets_pt30 == 5                            },
+            {"_1l_HT300_6j_ge1b_Mbl_htCorr"              , pass_general && passBaseline1l_AllJets && NGoodJets_pt30 == 6                            },
+            {"_1l_HT300_7j_ge1b_Mbl_htCorr"              , pass_general && passBaseline1l_Good && NGoodJets_pt30 == 7                               },
+            {"_1l_HT300_8j_ge1b_Mbl_htCorr"              , pass_general && passBaseline1l_Good && NGoodJets_pt30 == 8                               },
+            {"_1l_HT300_ge7j_ge1b_Mbl_htCorr"            , pass_general && passBaseline1l_Good                                                      },
+            {"_1l_0b_ge300ht_50to110mt_ge30MET"          , pass_general && passBaseline1l_WCR                                                       },
+            {"_1l_0b_ge300ht_50to110mt_ge30MET_even"     , pass_general && passBaseline1l_WCR && evenEvent                                          },
+            {"_1l_0b_ge300ht_50to110mt_ge30MET_odd"      , pass_general && passBaseline1l_WCR && !evenEvent                                         },
+            {"_1e_1m_ge2b_le5j"                          , pass_general && passBaseline1e1m                                                         },
+            {"_passQCDCR"                                , passBaseline1l_NonIsoMuon                                                                },
         };
 
         std::vector<TH1DInfo> histInfos = {
-            {    "h_njets",             20,   0.0,   20.0},
-            {"blind_njets",             20,   0.0,   20.0},
-            {    "h_njetsQCDCR",        20,   0.0,   20.0},
-            {    "h_ngjets",            20,   0.0,   20.0},
-            {    "h_ngjets_pt30",       20,   0.0,   20.0},
-            {    "h_ntops",             10,   0.0,   10.0},
-            {"blind_ntops",             10,   0.0,   10.0},
-            {    "h_nb",                10,   0.0,   10.0},
-            {"blind_nb",                10,   0.0,   10.0},
-            {    "h_deepESM",          200,   0.0,    1.0},
-            {"blind_deepESM",          200,   0.0,    1.0},
-            {    "h_deepESMQCDCR",     200,   0.0,    1.0},
-            {    "h_deepESMMerged",      4,   0.5,    4.5},
-            {"blind_deepESMMerged",      4,   0.5,    4.5},
-            {    "h_ht",               500,   0.0, 5000.0},
-            {    "h_htQCDCR",          500,   0.0, 5000.0},
-            {"blind_ht",               500,   0.0, 5000.0},
-            {    "h_mbl",              300,   0.0,  300.0},
-            {"blind_mbl",              300,   0.0,  300.0},
-            {    "h_lPt",              200,   0.0, 2000.0},
-            {"blind_lPt",              200,   0.0, 2000.0},
-            {    "h_lEta",             200,  -6.0,    6.0},
-            {"blind_lEta",             200,  -6.0,    6.0},
-            {    "h_lPhi",             200,  -4.0,    4.0},
-            {"blind_lPhi",             200,  -4.0,    4.0},
-            {    "h_isomPt",           200,   0.0, 2000.0},
-            {    "h_isomEta",          200,  -6.0,    6.0},
-            {    "h_isomPhi",          200,  -4.0,    4.0},
-            {    "h_jPt",              200,   0.0, 2000.0},
-            {"blind_jPt",              200,   0.0, 2000.0},
-            {    "h_jEta",             200,  -6.0,    6.0},
-            {"blind_jEta",             200,  -6.0,    6.0},
-            {    "h_jPhi",             200,  -4.0,    4.0},
-            {"blind_jPhi",             200,  -4.0,    4.0},
-            {    "h_allMbl",           300,   0.0,  300.0},            
-            {"blind_allMbl",           300,   0.0,  300.0},
-            {"h_weight",               200,  -5.0,    5.0},
-            {"h_leptonweight",         200,  -5.0,    5.0},
-            {"h_pileupWeight",         200,  -5.0,   20.0},
-            {"h_bTagWeight",           200,  -5.0,   20.0},
-            {"h_htDerivedweight",      200,  -5.0,    5.0},
-            {"h_prefiringScaleFactor", 200,  -5.0,    5.0},
-            {"h_eventweight",          200,  -5.0,   50.0},            
+            {    "h_njets",               20,   0.0,   20.0},
+            {"blind_njets",               20,   0.0,   20.0},
+            {    "h_njetsQCDCR",          20,   0.0,   20.0},
+            {    "h_ngjets",              20,   0.0,   20.0},
+            {    "h_ngjets_pt30",         20,   0.0,   20.0},
+            {    "h_ntops",               10,   0.0,   10.0},
+            {"blind_ntops",               10,   0.0,   10.0},
+            {    "h_nb",                  10,   0.0,   10.0},
+            {"blind_nb",                  10,   0.0,   10.0},
+            {    "h_deepESM",            200,   0.0,    1.0},
+            {"blind_deepESM",            200,   0.0,    1.0},
+            {    "h_deepESMQCDCR",       200,   0.0,    1.0},
+            {    "h_deepESMMerged",        4,   0.5,    4.5},
+            {"blind_deepESMMerged",        4,   0.5,    4.5},
+            {    "h_ht",                 500,   0.0, 5000.0},
+            {    "h_htQCDCR",            500,   0.0, 5000.0},
+            {"blind_ht",                 500,   0.0, 5000.0},
+            {    "h_mbl",                300,   0.0,  300.0},
+            {"blind_mbl",                300,   0.0,  300.0},
+            {    "h_lPt",                200,   0.0, 2000.0},
+            {"blind_lPt",                200,   0.0, 2000.0},
+            {    "h_lEta",               200,  -6.0,    6.0},
+            {"blind_lEta",               200,  -6.0,    6.0},
+            {    "h_lPhi",               200,  -4.0,    4.0},
+            {"blind_lPhi",               200,  -4.0,    4.0},
+            {    "h_isomPt",             200,   0.0, 2000.0},
+            {    "h_isomEta",            200,  -6.0,    6.0},
+            {    "h_isomPhi",            200,  -4.0,    4.0},
+            {    "h_jPt",                200,   0.0, 2000.0},
+            {    "h_jPt_j0",             200,   0.0, 2000.0},
+            {    "h_jPt_j1",             200,   0.0, 2000.0},
+            {    "h_jPt_j2",             200,   0.0, 2000.0},
+            {    "h_jPt_j3",             200,   0.0, 2000.0},
+            {    "h_jPt_j4",             200,   0.0, 2000.0},
+            {    "h_jPt_j5",             200,   0.0, 2000.0},
+            {    "h_jPt_j6",             200,   0.0, 2000.0},
+            {    "h_jPt_j7",             200,   0.0, 2000.0},
+            {    "h_jPt_j8",             200,   0.0, 2000.0},
+            {    "h_jPt_j9",             200,   0.0, 2000.0},
+            {"blind_jPt",                200,   0.0, 2000.0},
+            {    "h_jEta",               200,  -6.0,    6.0},
+            {"blind_jEta",               200,  -6.0,    6.0},
+            {    "h_jPhi",               200,  -4.0,    4.0},
+            {"blind_jPhi",               200,  -4.0,    4.0},
+            {    "h_allMbl",             300,   0.0,  300.0},            
+            {"blind_allMbl",             300,   0.0,  300.0},
+            {"h_nvtx",                   101,  -0.5,  100.5},
+            {"h_trueNumInteractions",    720,   0.0,  120.0},
+            {"h_fixedGridRhoFastjetAll", 720,   0.0,  120.0},
+            {"h_weight",                 200,  -5.0,    5.0},
+            {"h_leptonweight",           200,  -5.0,    5.0},
+            {"h_pileupWeight",           200,  -5.0,   20.0},
+            {"h_bTagWeight",             200,  -5.0,   20.0},
+            {"h_htDerivedweight",        200,  -5.0,    5.0},
+            {"h_prefiringScaleFactor",   200,  -5.0,    5.0},
+            {"h_eventweight",            200,  -5.0,   50.0},            
         };
 
         std::vector<TH2DInfo> hist2DInfos = {
@@ -394,6 +446,7 @@ void Analyze1Lep::Loop(NTupleReader& tr, double, int maxevents, bool)
             {"blind_jEta_jPhi",    100, -6.0,  6.0, 100,  -3.2,   3.2},
             {    "h_lEta_nb",      100, -6.0,  6.0,  10,   0.0,  10.0},
             {"blind_lEta_nb",      100, -6.0,  6.0,  10,   0.0,  10.0},
+            {    "h_njets_nvtx",    100, 0.0, 100.0, 15,  -0.5,  15.5},
         };
 
         std::vector<TH2DProfileInfo> hist2DProfileInfos = {
@@ -420,6 +473,17 @@ void Analyze1Lep::Loop(NTupleReader& tr, double, int maxevents, bool)
                 if(kv.first.find("passQCDCR")    != std::string::npos) w = weightQCDCR;
                 if(kv.first.find("noLepWeight")  != std::string::npos) w = weightNoLepton;
                 if(kv.first.find("noBTagWeight") != std::string::npos) w = weightNoBTag;
+                if(kv.first.find("noPuWeight")   != std::string::npos) w = weightNoPU;
+                if(kv.first.find("puWeightUp")   != std::string::npos) w = weightPUup;
+                if(kv.first.find("puWeightDown") != std::string::npos) w = weightPUdown;
+                if(kv.first.find("noPrefireWeight")   != std::string::npos) w = weightNoPrefire;
+                if(kv.first.find("prefireWeightUp")   != std::string::npos) w = weightPrefireUp;
+                if(kv.first.find("prefireWeightDown") != std::string::npos) w = weightPrefireDown;
+                if(kv.first.find("isrUp")   != std::string::npos) w = weightISRUp;
+                if(kv.first.find("isrDown") != std::string::npos) w = weightISRDown;
+                if(kv.first.find("fsrUp")   != std::string::npos) w = weightFSRUp;
+                if(kv.first.find("fsrDown") != std::string::npos) w = weightFSRDown;
+
                 my_histos["h_njets"               +kv.first]->Fill(NGoodJets_pt30, w);
                 my_histos["h_ngjets"              +kv.first]->Fill(NGenJets, eventweight);
                 my_histos["h_ngjets_pt30"         +kv.first]->Fill(NGenJets_pt30, eventweight);
@@ -439,6 +503,10 @@ void Analyze1Lep::Loop(NTupleReader& tr, double, int maxevents, bool)
                 my_histos["h_htDerivedweight"     +kv.first]->Fill(htDerivedweight, w);
                 my_histos["h_prefiringScaleFactor"+kv.first]->Fill(prefiringScaleFactor, w);
                 my_histos["h_eventweight"         +kv.first]->Fill(eventweight, w);
+                my_histos["h_nvtx"                +kv.first]->Fill(NVtx, w);
+                //my_histos["h_trueNumInteractions" +kv.first]->Fill(TrueNumInteractions, w);
+                my_histos["h_fixedGridRhoFastjetAll"+kv.first]->Fill(fixedGridRhoFastjetAll, w);
+                my_2d_histos["h_njets_nvtx"+kv.first]->Fill(NVtx, NGoodJets_pt30, w);
                 for(const auto& l : GoodLeptons)
                 {
                     my_histos["h_lPt"+kv.first]->Fill(l.second.Pt(), w);
@@ -457,13 +525,22 @@ void Analyze1Lep::Loop(NTupleReader& tr, double, int maxevents, bool)
                 {
                     my_histos["h_allMbl"+kv.first]->Fill(mbl, w);
                 }
+
+                // Pt ranked jets are for good jets only, keep track of good jet rank
+                unsigned int goodJetRank = 0;
                 for(unsigned int j = 0; j < Jets.size(); j++)
                 {
-                    if(!GoodJets_pt30[j]) continue;
+
+                    if(!GoodJets_pt30[j] || !NonIsoMuonJets_pt30[j]) continue;
+
+                    if (goodJetRank < 10) { my_histos["h_jPt_j"+std::to_string(goodJetRank)+kv.first]->Fill(Jets.at(j).Pt(),w); }
+
                     my_histos["h_jPt"+kv.first]->Fill(Jets.at(j).Pt(), w);
                     my_histos["h_jEta"+kv.first]->Fill(Jets.at(j).Eta(), w);
                     my_histos["h_jPhi"+kv.first]->Fill(Jets.at(j).Phi(), w);
                     my_2d_histos["h_jEta_jPhi"+kv.first]->Fill(Jets.at(j).Eta(), Jets.at(j).Phi(), w);
+                    
+                    goodJetRank++;
                 }
                 my_2d_histos["h_njets_deepESM"+kv.first]->Fill(NGoodJets_pt30, deepESM_val, w);
                 my_2d_histos["h_njets_mbl"+kv.first]->Fill(NGoodJets_pt30, Mbl, w);

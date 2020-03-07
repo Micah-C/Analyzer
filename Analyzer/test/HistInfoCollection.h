@@ -255,13 +255,15 @@ public:
     std::map<std::string,double> computeYields(const std::string& histName, const std::string& histType, const int min, const int max, const int rebin = -1)
     {
         std::map<std::string,double> yieldMap;
-        std::vector<std::vector<histInfo>*> dataSets  = { &dataVec_, &bgVec_, &sigVec_ };
+        //std::vector<std::vector<histInfo>*> dataSets  = { &dataVec_, &bgVec_, &sigVec_ };
+        //std::vector<std::vector<histInfo>*> dataSets  = { &dataVec_, &bgVec_, };
+        std::vector<std::vector<histInfo>*> dataSets = { &sigVec_ };
         std::shared_ptr<TH1> hbgSum(nullptr);
         THStack* bgStack = new THStack();
 
-        setUpBG(histName, rebin, bgStack, hbgSum, false);
+        //setUpBG(histName, rebin, bgStack, hbgSum, false);
         setUpSignal(histName, rebin);
-        setUpData(histName, rebin);
+        //setUpData(histName, rebin);
         
         makeYieldMap(yieldMap, dataSets, hbgSum, histType, min, max);
 
@@ -273,7 +275,9 @@ public:
     std::map<std::string,double> computeYields(const std::string&, const std::string& histType, const std::shared_ptr<TH1>& hbgSum, const int min, const int max)
     {
         std::map<std::string,double> yieldMap;
-        std::vector<std::vector<histInfo>*> dataSets  = { &dataVec_, &bgVec_, &sigVec_ };
+        //std::vector<std::vector<histInfo>*> dataSets  = { &dataVec_, &bgVec_, &sigVec_ };
+        //std::vector<std::vector<histInfo>*> dataSets  = { &dataVec_, &bgVec_ };
+        std::vector<std::vector<histInfo>*> dataSets = { &sigVec_ };
         
         makeYieldMap(yieldMap, dataSets, hbgSum, histType, min, max);
 

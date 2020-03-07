@@ -36,13 +36,13 @@ fittag = arg.fittag + "_" + year
 
 inputfilename = "/uscms_data/d3/jhiltb/susy/CMSSW_8_1_0/src/HiggsAnalysis/CombinedLimit/"
 if year == "2016":
-    inputfilename += "Keras_2016_v1.1" 
+    inputfilename += "Keras_2016_v1.2" 
 elif year == "2017":
-    inputfilename += "Keras_2017_v1.1" 
+    inputfilename += "Keras_2017_v1.2" 
 elif year == "2018pre":
-    inputfilename += "Keras_2018pre_v1.0" 
+    inputfilename += "Keras_2018pre_v1.2" 
 elif year == "2018post":
-    inputfilename += "Keras_2018post_v1.0" 
+    inputfilename += "Keras_2018post_v1.2" 
 else:
     print "Year \"%s\" is not valid!"%(year)
     print "Exiting..."
@@ -59,29 +59,35 @@ ROOT.TH1.SetDefaultSumw2()
 mvas = ["D1","D2","D3","D4"]
 base = "TT_h_njets_pt30_1l"
 systs = ["", 
-         "_JECUp",
-         "_JECDown",
-         "_JERUp",
-         "_JERDown",
-         "_btgUp",
-         "_btgDown",
-         "_lepUp",
-         "_lepDown",
-         "_pdfUp",
-         "_pdfDown",
-         "_sclUp",
-         "_sclDown",
-         "_htUp",
-         "_htDown",
-         "_puUp",
-         "_puDown"
+         #"_pTScaled",
+         #"_pTScaled",
+         #"_JECUp",
+         #"_JECDown",
+         #"_JERUp",
+         #"_JERDown",
+         #"_btgUp",
+         #"_btgDown",
+         #"_lepUp",
+         #"_lepDown",
+         #"_pdfUp",
+         #"_pdfDown",
+         #"_sclUp",
+         #"_sclDown",
+         #"_htUp",
+         #"_htDown",
+         #"_puUp",
+         #"_puDown",
 ]
 if "2017" in year or "2018" in year:
     systs.extend([
-         "_isrUp",
-         "_isrDown",
-         "_fsrUp",
-         "_fsrDown",
+         #"_isrUp",
+         #"_isrDown",
+         #"_fsrUp",
+         #"_fsrDown",
+         "_isr2Up",
+         "_isr2Down",
+         "_fsr2Up",
+         "_fsr2Down",
          ])
 colors = [ROOT.kBlack,
           ROOT.kCyan+1,
@@ -103,7 +109,9 @@ colors = [ROOT.kBlack,
           ROOT.kGreen-6,
           ROOT.kGreen+2,
           ROOT.kBlue-7,
-          ROOT.kBlue-5]
+          ROOT.kBlue-5,
+          ROOT.kMagenta+3,
+          ROOT.kMagenta]
 
 histos = {}
 for mva in mvas: 
@@ -122,7 +130,20 @@ extra_systs = ["_isrUp",
                "_isrDown",
                "_fsrUp",
                "_fsrDown",
+               #"_isr2Up",
+               #"_isr2Down",
+               #"_fsr2Up",
+               #"_fsr2Down"
                ]
+
+spec_histos = {}
+spec_systs = [#"_095PT",
+              #"_095PT",
+              #"_MADGRAPH",
+              #"_MADGRAPH",
+              #"_pTScaled",
+              #"_pTScaled",
+             ]
 extra_base = "_h_njets_pt30_1l"
 if "2016" in year:
     # deal with the isr and fsr uncertainties
@@ -134,7 +155,16 @@ if "2016" in year:
         histos[mva].extend(extra_Dhistos)
     # now append to other lists
     systs = systs+extra_systs
- 
+
+for mva in mvas:
+    spec_histnames = [mva+"_TT"+syst+extra_base for syst in spec_systs]
+    print spec_histnames
+    spec_Dhistos = [inputfile.Get(histname) for histname in spec_histnames]
+    spec_histos[mva] = spec_Dhistos
+    histos[mva].extend(spec_Dhistos)
+# now append to other lists
+systs = systs+spec_systs
+
 #print systs
 #print histos   
 # make the summed histograms
@@ -171,6 +201,7 @@ for mva in mvas:
         # Compare shape in given mva bin to total shape
         ratios = []
         for i in [0, start, start+1]:
+            print i
             ratio = histos[mva][i].Clone(mva+"_ratio"+systs[i])
             ratio.Scale(1./ratio.Integral())
             ratio.Divide(sumhistos_norm[i])
@@ -192,7 +223,7 @@ for mva in mvas:
         #     diffratios.append(diffratio)
 
         # Also make symmetrized versions of the lepton and btag and pdf uncertainties and isr
-        if start > 4 and start <= len(systs)-5:
+        if "btg" in systs[start] or "lep" in systs[start] or "pdf" in systs[start] or "MADGRAPH" in systs[start] or "isr" in systs[start] or "fsr" in systs[start]:
             print "making final histo for systematic: ", systs[start]
             # take the average of Up and 1/Down
             mytemph = divratios[0].Clone(mva+systs[start].replace("Up","temp"))
@@ -249,7 +280,7 @@ for mva in mvas:
 
 
         plot.makeplot(divratios, [systs[s] for s in [0, start, start+1]], "N_{j}-7", mva+"_"+systs[start]+"_comp_div", plotdir="./", linear=True, legendColumns=1, 
-                      ymin=0.9, ymax=1.1, ylabel="", dropzeroes=False,
+                      ymin=0.8, ymax=1.3, ylabel="", dropzeroes=False,
                       colors=[colors[s] for s in [0, start, start+1]], norm=False, drawstyle="hist")
 
         # plot.makeplot(diffratios, [systs[s] for s in [0, start, start+1]], "N_{j}-7", mva+"_"+systs[start]+"_comp_diff", plotdir="./", linear=True, legendColumns=1, 
@@ -262,100 +293,6 @@ for mva in mvas:
                       ymin=1e-5, ymax=1, ylabel="",
                       colors=[ROOT.kGray+1]+[colors[s] for s in [0, start, start+1]], norm=True, drawstyle="hist")
 
-
-#for 2016, also copy over isr from the 2017 file -- Should be replaced by the dedicated systematic samples
-#f_2017 = ROOT.TFile.Open("FitInputs/ttbar_systematics_2017_freezing.root")
-#h_isr_2017 = [f_2017.Get("%s_isr"%mva) for mva in mvas]
-#outputfile.cd()
-#for h in h_isr_2017:
-#    h.Write()
-
-# Add the QCD CR systematic and the new HT systematics
-#if "2016" in fitversion:
-#    #f_CR_2016 = ROOT.TFile.Open("/uscms/homes/k/kmei91/public/forNadja/FinalSystematicFiles/qcdCR_shape_systematic_2016.root")
-#    f_CR_2016 = ROOT.TFile.Open("/uscms/homes/k/kmei91/public/forNadja/RatioOfRatiosSystematic_12BinInclusive/2016_qcdCR_qcdCRErr_Systematics.root")
-#    h_CR_2016 = [f_CR_2016.Get("%s_qcdCR"%mva) for mva in mvas]
-#    herr_CR_2016 = [f_CR_2016.Get("%s_qcdCRErr"%mva) for mva in mvas]
-#    outputfile.cd()
-#    for h in h_CR_2016:
-#        newh = ROOT.TH1D(h.GetName(), h.GetTitle(), 6, 0, 6)
-#        for bin in range(h.GetNbinsX()):
-#            newh.SetBinContent(bin+1, h.GetBinContent(bin+1) if h.GetBinContent(bin+1) > 0 else h.GetBinContent(bin))
-#        newh.Write()
-#    for h in herr_CR_2016:
-#        newh = ROOT.TH1D(h.GetName(), h.GetTitle(), 6, 0, 6)
-#        for bin in range(h.GetNbinsX()):
-#            newh.SetBinContent(bin+1, h.GetBinContent(bin+1) if h.GetBinContent(bin+1) > 0 else h.GetBinContent(bin))
-#        newh.Write()
-#
-#    f_HT_2016 = ROOT.TFile.Open("/uscms/homes/k/kmei91/public/forNadja/RatioOfRatiosSystematic_12BinInclusive/2016_htRatioSyst.root")
-#    h_HTtail_2016 = [f_HT_2016.Get("%s_httail"%mva) for mva in mvas]
-#    h_HTnjet_2016 = [f_HT_2016.Get("%s_htnjet"%mva) for mva in mvas]
-#    outputfile.cd()
-#    for i, h in enumerate(h_HTtail_2016):
-#        newh = ROOT.TH1D(h.GetName(), h.GetTitle(), 6, 0, 6)
-#        for bin in range(h.GetNbinsX()):
-#            newh.SetBinContent(bin+1, h.GetBinContent(bin+1) if h.GetBinContent(bin+1) > 0 else h.GetBinContent(bin))
-#        newh.Write()
-#    for h in h_HTnjet_2016:
-#        newh = ROOT.TH1D(h.GetName(), h.GetTitle(), 6, 0, 6)
-#        for bin in range(h.GetNbinsX()):
-#            newh.SetBinContent(bin+1, h.GetBinContent(bin+1) if h.GetBinContent(bin+1) > 0 else h.GetBinContent(bin))
-#        newh.Write()
-#
-#        
-#if "2017" in fitversion:
-#    f_CR_2017 = ROOT.TFile.Open("/uscms/homes/k/kmei91/public/forNadja/RatioOfRatiosSystematic_12BinInclusive/2017_qcdCR_qcdCRErr_Systematics.root")
-#    #f_CR_2017 = ROOT.TFile.Open("/uscms_data/d1/owenl/stealth-rpv/mva-shape-syst/dratio-rw5-fab5.root")
-#    #print ["h_njets_dratio_mva%s_ab_rw5_fab"%mva for mva in ["1","2","3","4"]]
-#    #h_CR_2017 = [f_CR_2017.Get("h_njets_dratio_mva%s_ab_rw5_fab5"%mva) for mva in ["1","2","3","4"]]
-#    #f_CR_2017 = ROOT.TFile.Open("/uscms/homes/k/kmei91/public/forNadja/FinalSystematicFiles/qcdCR_shape_systematic_2017.root")
-#    h_CR_2017 = [f_CR_2017.Get("%s_qcdCR"%mva) for mva in mvas]
-#    herr_CR_2017 = [f_CR_2017.Get("%s_qcdCRErr"%mva) for mva in mvas]
-#    outputfile.cd()
-#    for i,h in enumerate(h_CR_2017):
-#        #print h
-#        newh = ROOT.TH1D("D%s_qcdCR"%(i+1), "D%s_qcdCR"%(i+1), 6, 0, 6)
-#        for bin in range(h.GetNbinsX()):
-#            newh.SetBinContent(bin+1, h.GetBinContent(bin+1) if h.GetBinContent(bin+1) > 0 else h.GetBinContent(bin))
-#            # if i == 2 and bin >= 5:
-#            #     newh.SetBinContent(bin+1, 1.)
-#            # elif i == 3 and bin >=4:
-#            #     newh.SetBinContent(bin+1, 1.)
-#            # else:
-#            #     newh.SetBinContent(bin+1, h.GetBinContent(bin+1) if h.GetBinContent(bin+1) > 0 else h.GetBinContent(bin))
-#        newh.Write()
-#    for i,h in enumerate(herr_CR_2017):
-#        newh = ROOT.TH1D("D%s_qcdCRErr"%(i+1), "D%s_qcdCRErr"%(i+1), 6, 0, 6)
-#        for bin in range(h.GetNbinsX()):
-#            newh.SetBinContent(bin+1, h.GetBinContent(bin+1) if h.GetBinContent(bin+1) > 0 else h.GetBinContent(bin))
-#        newh.Write()
-#
-#    f_HT_2017 = ROOT.TFile.Open("/uscms/homes/k/kmei91/public/forNadja/RatioOfRatiosSystematic_12BinInclusive/2017_htRatioSyst.root")
-#    h_HTtail_2017 = [f_HT_2017.Get("%s_httail"%mva) for mva in mvas]
-#    h_HTnjet_2017 = [f_HT_2017.Get("%s_htnjet"%mva) for mva in mvas]
-#    outputfile.cd()
-#    for h in h_HTtail_2017:
-#        newh = ROOT.TH1D(h.GetName(), h.GetTitle(), 6, 0, 6)
-#        for bin in range(h.GetNbinsX()):
-#            newh.SetBinContent(bin+1, h.GetBinContent(bin+1) if h.GetBinContent(bin+1) > 0 else h.GetBinContent(bin))
-#        newh.Write()
-#    for h in h_HTnjet_2017:
-#        newh = ROOT.TH1D(h.GetName(), h.GetTitle(), 6, 0, 6)
-#        for bin in range(h.GetNbinsX()):
-#            newh.SetBinContent(bin+1, h.GetBinContent(bin+1) if h.GetBinContent(bin+1) > 0 else h.GetBinContent(bin))
-#        newh.Write()
-
-
-# Add the systematic from Owen
-# if "2016" in fitversion:
-#     f_owen = ROOT.TFile.Open("/uscms_data/d1/owenl/stealth-rpv/signal-syst-shape-2016_RPV_2t6j_mStop-450.root")
-#     h_owen = [f_owen.Get("h_njets_double_ratio_%s_rebin"%mva.replace("D","d")).Clone("%s_ttHTshape"%mva) for mva in mvas]
-#     outputfile.cd()
-#     for h in h_owen:
-#         h.Write()
-
-#*(1) Fit with a0, a1, a2 shared across MVA bins, fitting to pseudo-data composed of nominal samples*
 #Results are here:
 fname_nom_shared = "%s/%s_nom_shared/fitDiagnostics%sRPV550.root"%(fitdir,fittag,year)
 f_nom_shared = ROOT.TFile.Open(fname_nom_shared)
@@ -373,7 +310,7 @@ for mva in mvas:
     h = f_nom_sep.Get("shapes_fit_b/%s/TT" % mva)
     histos_nom_sep[mva] = h
 
-
+"""
 #*(3) Fit with a0, a1, a2 shared across MVA bins, fitting to pseudo-data composed of JEC UP samples*
 #Results are here:
 fname_JECUp_shared = "%s/%s_JECUp_shared/fitDiagnostics%sRPV550.root"%(fitdir,fittag,year)
@@ -448,8 +385,7 @@ histos_JERDown_sep = {}
 for mva in mvas:
     h = f_JERDown_sep.Get("shapes_fit_b/%s/TT" % mva)
     histos_JERDown_sep[mva] = h
-
-
+"""
 
 histos_FSRUp_shared = {}
 histos_FSRUp_sep = {}
@@ -524,8 +460,66 @@ if "201" in year:
     for mva in mvas:
         h = f_ISRDown_sep.Get("shapes_fit_b/%s/TT" % mva)
         histos_ISRDown_sep[mva] = h
-    
 
+#histos_095PT_shared = {}
+#histos_095PT_sep = {}
+#if "201" in year:
+#    
+#    #*(19) Fit with a0, a1, a2 shared across MVA bins, fitting to pseudo-data composed of ISR Down samples*
+#    #Results are here:
+#    fname_095PT_shared = "%s/%s_095PT_shared/fitDiagnostics%sRPV550.root"%(fitdir,fittag,year)
+#    f_095PT_shared = ROOT.TFile.Open(fname_095PT_shared)
+#    for mva in mvas:
+#        h = f_095PT_shared.Get("shapes_fit_b/%s/TT" % mva)
+#        histos_095PT_shared[mva] = h
+#    
+#    #*(20) Fit with separate a0, a1, a2 for each MVA bin, fitting to pseudo-data composed of ISR Down samples*
+#    #Results are here:
+#    fname_095PT_sep = "%s/%s_095PT_sep/fitDiagnostics%sRPV550.root"%(fitdir,fittag,year)
+#    f_095PT_sep = ROOT.TFile.Open(fname_095PT_sep)
+#    for mva in mvas:
+#        h = f_095PT_sep.Get("shapes_fit_b/%s/TT" % mva)
+#        histos_095PT_sep[mva] = h
+
+#histos_MADGRAPH_shared = {}
+#histos_MADGRAPH_sep = {}
+#if "201" in year:
+#    
+#    #*(19) Fit with a0, a1, a2 shared across MVA bins, fitting to pseudo-data composed of ISR Down samples*
+#    #Results are here:
+#    fname_MADGRAPH_shared = "%s/%s_MADGRAPH_shared/fitDiagnostics%sRPV550.root"%(fitdir,fittag,year)
+#    f_MADGRAPH_shared = ROOT.TFile.Open(fname_MADGRAPH_shared)
+#    for mva in mvas:
+#        h = f_MADGRAPH_shared.Get("shapes_fit_b/%s/TT" % mva)
+#        histos_MADGRAPH_shared[mva] = h
+#    
+#    #*(20) Fit with separate a0, a1, a2 for each MVA bin, fitting to pseudo-data composed of ISR Down samples*
+#    #Results are here:
+#    fname_MADGRAPH_sep = "%s/%s_MADGRAPH_sep/fitDiagnostics%sRPV550.root"%(fitdir,fittag,year)
+#    f_MADGRAPH_sep = ROOT.TFile.Open(fname_MADGRAPH_sep)
+#    for mva in mvas:
+#        h = f_MADGRAPH_sep.Get("shapes_fit_b/%s/TT" % mva)
+#        histos_MADGRAPH_sep[mva] = h
+
+#histos_pTScaled_shared = {}
+#histos_pTScaled_sep = {}
+#if "201" in year:
+#    
+#    #*(19) Fit with a0, a1, a2 shared across MVA bins, fitting to pseudo-data composed of ISR Down samples*
+#    #Results are here:
+#    fname_pTScaled_shared = "%s/%s_pTScaled_shared/fitDiagnostics%sRPV550.root"%(fitdir,fittag,year)
+#    f_pTScaled_shared = ROOT.TFile.Open(fname_pTScaled_shared)
+#    for mva in mvas:
+#        h = f_pTScaled_shared.Get("shapes_fit_b/%s/TT" % mva)
+#        histos_pTScaled_shared[mva] = h
+#    
+#    #*(20) Fit with separate a0, a1, a2 for each MVA bin, fitting to pseudo-data composed of ISR Down samples*
+#    #Results are here:
+#    fname_pTScaled_sep = "%s/%s_pTScaled_sep/fitDiagnostics%sRPV550.root"%(fitdir,fittag,year)
+#    f_pTScaled_sep = ROOT.TFile.Open(fname_pTScaled_sep)
+#    for mva in mvas:
+#        h = f_pTScaled_sep.Get("shapes_fit_b/%s/TT" % mva)
+#        histos_pTScaled_sep[mva] = h
 
 #For each of the above files you can
 #- Navigate to the TDirectoryFile called shapes_fit_s
@@ -562,75 +556,129 @@ for mva in mvas:
                   ylabel="",
                   colors=colors2, norm=False, drawstyle="lastP")
 
-    # for syst JEC Up case
-    plot.makeplot([histos_nom_shared[mva].Clone(), histos_JECUp_sep[mva].Clone(), histos_JECUp_shared[mva].Clone(), histos_rebin[mva][1].Clone()], 
-                  ["Nominal","Separate", "Shared", "MC"], 
-                  "N_{j}-7", mva+"_JECUp_fit"+"_njets", plotdir="./", linear=False, legendColumns=1, 
-                  ymin=0.01, ymax=1e5, 
-                  ylabel="",
-                  colors=colors3, norm=False, drawstyle="lastP")
-    
-    # for JEC Down case
-    plot.makeplot([histos_nom_shared[mva].Clone(), histos_JECDown_sep[mva].Clone(), histos_JECDown_shared[mva].Clone(), histos_rebin[mva][2].Clone()], 
-                  ["Nominal","Separate", "Shared", "MC"], 
-                  "N_{j}-7", mva+"_JECDown_fit"+"_njets", plotdir="./", linear=False, legendColumns=1, 
-                  ymin=0.01, ymax=1e5, 
-                  ylabel="",
-                  colors=colors3, norm=False, drawstyle="lastP")
-    
-    # for JER Up case
-    plot.makeplot([histos_nom_shared[mva].Clone(), histos_JERUp_sep[mva].Clone(), histos_JERUp_shared[mva].Clone(), histos_rebin[mva][3].Clone()], 
-                  ["Nominal","Separate", "Shared", "MC"], 
-                  "N_{j}-7", mva+"_JERUp_fit"+"_njets", plotdir="./", linear=False, legendColumns=1, 
-                  ymin=0.01, ymax=1e5, 
-                  ylabel="",
-                  colors=colors3, norm=False, drawstyle="lastP")
-    
-    # for JER Down case
-    plot.makeplot([histos_nom_shared[mva].Clone(), histos_JERDown_sep[mva].Clone(), histos_JERDown_shared[mva].Clone(), histos_rebin[mva][4].Clone()], 
-                  ["Nominal","Separate", "Shared", "MC"], 
-                  "N_{j}-7", mva+"_JERDown_fit"+"_njets", plotdir="./", linear=False, legendColumns=1, 
-                  ymin=0.01, ymax=1e5, 
-                  ylabel="",
-                  colors=colors3, norm=False, drawstyle="lastP")
-   
-    if "201" in year:
-        # for FSR Up case
-        index_FSRUp = systs.index("_fsrUp")
-        plot.makeplot([histos_nom_shared[mva].Clone(), histos_FSRUp_sep[mva].Clone(), histos_FSRUp_shared[mva].Clone(), histos_rebin[mva][index_FSRUp].Clone()], 
-                      ["Nominal","Separate", "Shared", "MC"], 
-                      "N_{j}-7", mva+"_FSRUp_fit"+"_njets", plotdir="./", linear=False, legendColumns=1, 
-                      ymin=0.01, ymax=1e5, 
-                      ylabel="",
-                      colors=colors3, norm=False, drawstyle="lastP")
-        
-        # for FSR Down case
-        index_FSRDown = systs.index("_fsrDown")
-        plot.makeplot([histos_nom_shared[mva].Clone(), histos_FSRDown_sep[mva].Clone(), histos_FSRDown_shared[mva].Clone(), histos_rebin[mva][index_FSRDown].Clone()], 
-                      ["Nominal","Separate", "Shared", "MC"], 
-                      "N_{j}-7", mva+"_FSRDown_fit"+"_njets", plotdir="./", linear=False, legendColumns=1, 
-                      ymin=0.01, ymax=1e5, 
-                      ylabel="",
-                      colors=colors3, norm=False, drawstyle="lastP")
-        
-    if "201" in year: 
-        # for ISR Up case
-        index_ISRUp = systs.index("_isrUp")
-        plot.makeplot([histos_nom_shared[mva].Clone(), histos_ISRUp_sep[mva].Clone(), histos_ISRUp_shared[mva].Clone(), histos_rebin[mva][index_ISRUp].Clone()], 
-                      ["Nominal","Separate", "Shared", "MC"], 
-                      "N_{j}-7", mva+"_ISRUp_fit"+"_njets", plotdir="./", linear=False, legendColumns=1, 
-                      ymin=0.01, ymax=1e5, 
-                      ylabel="",
-                      colors=colors3, norm=False, drawstyle="lastP")
-        
-        # for ISR Down case
-        index_ISRDown = systs.index("_isrDown")
-        plot.makeplot([histos_nom_shared[mva].Clone(), histos_ISRDown_sep[mva].Clone(), histos_ISRDown_shared[mva].Clone(), histos_rebin[mva][index_ISRDown].Clone()], 
-                      ["Nominal","Separate", "Shared", "MC"], 
-                      "N_{j}-7", mva+"_ISRDown_fit"+"_njets", plotdir="./", linear=False, legendColumns=1, 
-                      ymin=0.01, ymax=1e5, 
-                      ylabel="",
-                      colors=colors3, norm=False, drawstyle="lastP")
+#    # for syst JEC Up case
+#    plot.makeplot([histos_nom_shared[mva].Clone(), histos_JECUp_sep[mva].Clone(), histos_JECUp_shared[mva].Clone(), histos_rebin[mva][1].Clone()], 
+#                  ["Nominal","Separate", "Shared", "MC"], 
+#                  "N_{j}-7", mva+"_JECUp_fit"+"_njets", plotdir="./", linear=False, legendColumns=1, 
+#                  ymin=0.01, ymax=1e5, 
+#                  ylabel="",
+#                  colors=colors3, norm=False, drawstyle="lastP")
+#    
+#    # for JEC Down case
+#    plot.makeplot([histos_nom_shared[mva].Clone(), histos_JECDown_sep[mva].Clone(), histos_JECDown_shared[mva].Clone(), histos_rebin[mva][2].Clone()], 
+#                  ["Nominal","Separate", "Shared", "MC"], 
+#                  "N_{j}-7", mva+"_JECDown_fit"+"_njets", plotdir="./", linear=False, legendColumns=1, 
+#                  ymin=0.01, ymax=1e5, 
+#                  ylabel="",
+#                  colors=colors3, norm=False, drawstyle="lastP")
+#    
+#    # for JER Up case
+#    plot.makeplot([histos_nom_shared[mva].Clone(), histos_JERUp_sep[mva].Clone(), histos_JERUp_shared[mva].Clone(), histos_rebin[mva][3].Clone()], 
+#                  ["Nominal","Separate", "Shared", "MC"], 
+#                  "N_{j}-7", mva+"_JERUp_fit"+"_njets", plotdir="./", linear=False, legendColumns=1, 
+#                  ymin=0.01, ymax=1e5, 
+#                  ylabel="",
+#                  colors=colors3, norm=False, drawstyle="lastP")
+#    
+#    # for JER Down case
+#    plot.makeplot([histos_nom_shared[mva].Clone(), histos_JERDown_sep[mva].Clone(), histos_JERDown_shared[mva].Clone(), histos_rebin[mva][4].Clone()], 
+#                  ["Nominal","Separate", "Shared", "MC"], 
+#                  "N_{j}-7", mva+"_JERDown_fit"+"_njets", plotdir="./", linear=False, legendColumns=1, 
+#                  ymin=0.01, ymax=1e5, 
+#                  ylabel="",
+#                  colors=colors3, norm=False, drawstyle="lastP")
+#
+#    # for 095PT case
+#    plot.makeplot([histos_nom_shared[mva].Clone(), histos_095PT_sep[mva].Clone(), histos_095PT_shared[mva].Clone(), histos_rebin[mva][4].Clone()], 
+#                  ["Nominal","Separate", "Shared", "MC"], 
+#                  "N_{j}-7", mva+"_095PT_fit"+"_njets", plotdir="./", linear=False, legendColumns=1, 
+#                  ymin=0.01, ymax=1e5, 
+#                  ylabel="",
+#                  colors=colors3, norm=False, drawstyle="lastP")
+#   
+#    # for MADGRAPH case
+#    plot.makeplot([histos_nom_shared[mva].Clone(), histos_MADGRAPH_sep[mva].Clone(), histos_MADGRAPH_shared[mva].Clone(), histos_rebin[mva][4].Clone()], 
+#                  ["Nominal","Separate", "Shared", "MC"], 
+#                  "N_{j}-7", mva+"_MADGRAPH_fit"+"_njets", plotdir="./", linear=False, legendColumns=1, 
+#                  ymin=0.01, ymax=1e5, 
+#                  ylabel="",
+#                  colors=colors3, norm=False, drawstyle="lastP")
+#
+#    if "201" in year:
+#        # for FSR Up case
+#        index_FSRUp = systs.index("_fsrUp")
+#        plot.makeplot([histos_nom_shared[mva].Clone(), histos_FSRUp_sep[mva].Clone(), histos_FSRUp_shared[mva].Clone(), histos_rebin[mva][index_FSRUp].Clone()], 
+#                      ["Nominal","Separate", "Shared", "MC"], 
+#                      "N_{j}-7", mva+"_FSRUp_fit"+"_njets", plotdir="./", linear=False, legendColumns=1, 
+#                      ymin=0.01, ymax=1e5, 
+#                      ylabel="",
+#                      colors=colors3, norm=False, drawstyle="lastP")
+#        
+#        # for FSR Down case
+#        index_FSRDown = systs.index("_fsrDown")
+#        plot.makeplot([histos_nom_shared[mva].Clone(), histos_FSRDown_sep[mva].Clone(), histos_FSRDown_shared[mva].Clone(), histos_rebin[mva][index_FSRDown].Clone()], 
+#                      ["Nominal","Separate", "Shared", "MC"], 
+#                      "N_{j}-7", mva+"_FSRDown_fit"+"_njets", plotdir="./", linear=False, legendColumns=1, 
+#                      ymin=0.01, ymax=1e5, 
+#                      ylabel="",
+#                      colors=colors3, norm=False, drawstyle="lastP")
+#        
+#    if "201" in year: 
+#        # for ISR Up case
+#        index_ISRUp = systs.index("_isrUp")
+#        plot.makeplot([histos_nom_shared[mva].Clone(), histos_ISRUp_sep[mva].Clone(), histos_ISRUp_shared[mva].Clone(), histos_rebin[mva][index_ISRUp].Clone()], 
+#                      ["Nominal","Separate", "Shared", "MC"], 
+#                      "N_{j}-7", mva+"_ISRUp_fit"+"_njets", plotdir="./", linear=False, legendColumns=1, 
+#                      ymin=0.01, ymax=1e5, 
+#                      ylabel="",
+#                      colors=colors3, norm=False, drawstyle="lastP")
+#        
+#        # for ISR Down case
+#        index_ISRDown = systs.index("_isrDown")
+#        plot.makeplot([histos_nom_shared[mva].Clone(), histos_ISRDown_sep[mva].Clone(), histos_ISRDown_shared[mva].Clone(), histos_rebin[mva][index_ISRDown].Clone()], 
+#                      ["Nominal","Separate", "Shared", "MC"], 
+#                      "N_{j}-7", mva+"_ISRDown_fit"+"_njets", plotdir="./", linear=False, legendColumns=1, 
+#                      ymin=0.01, ymax=1e5, 
+#                      ylabel="",
+#                      colors=colors3, norm=False, drawstyle="lastP")
+#        
+#    if "201" in year:
+#        # for FSR Up case
+#        index_FSRUp = systs.index("_fsr2Up")
+#        plot.makeplot([histos_nom_shared[mva].Clone(), histos_FSRUp_sep[mva].Clone(), histos_FSRUp_shared[mva].Clone(), histos_rebin[mva][index_FSRUp].Clone()], 
+#                      ["Nominal","Separate", "Shared", "MC"], 
+#                      "N_{j}-7", mva+"_FSRUp_fit"+"_njets", plotdir="./", linear=False, legendColumns=1, 
+#                      ymin=0.01, ymax=1e5, 
+#                      ylabel="",
+#                      colors=colors3, norm=False, drawstyle="lastP")
+#        
+#        # for FSR Down case
+#        index_FSRDown = systs.index("_fsr2Down")
+#        plot.makeplot([histos_nom_shared[mva].Clone(), histos_FSRDown_sep[mva].Clone(), histos_FSRDown_shared[mva].Clone(), histos_rebin[mva][index_FSRDown].Clone()], 
+#                      ["Nominal","Separate", "Shared", "MC"], 
+#                      "N_{j}-7", mva+"_FSRDown_fit"+"_njets", plotdir="./", linear=False, legendColumns=1, 
+#                      ymin=0.01, ymax=1e5, 
+#                      ylabel="",
+#                      colors=colors3, norm=False, drawstyle="lastP")
+#        
+#    if "201" in year: 
+#        # for ISR Up case
+#        index_ISRUp = systs.index("_isr2Up")
+#        plot.makeplot([histos_nom_shared[mva].Clone(), histos_ISRUp_sep[mva].Clone(), histos_ISRUp_shared[mva].Clone(), histos_rebin[mva][index_ISRUp].Clone()], 
+#                      ["Nominal","Separate", "Shared", "MC"], 
+#                      "N_{j}-7", mva+"_ISRUp_fit"+"_njets", plotdir="./", linear=False, legendColumns=1, 
+#                      ymin=0.01, ymax=1e5, 
+#                      ylabel="",
+#                      colors=colors3, norm=False, drawstyle="lastP")
+#        
+#        # for ISR Down case
+#        index_ISRDown = systs.index("_isr2Down")
+#        plot.makeplot([histos_nom_shared[mva].Clone(), histos_ISRDown_sep[mva].Clone(), histos_ISRDown_shared[mva].Clone(), histos_rebin[mva][index_ISRDown].Clone()], 
+#                      ["Nominal","Separate", "Shared", "MC"], 
+#                      "N_{j}-7", mva+"_ISRDown_fit"+"_njets", plotdir="./", linear=False, legendColumns=1, 
+#                      ymin=0.01, ymax=1e5, 
+#                      ylabel="",
+#                      colors=colors3, norm=False, drawstyle="lastP")
         
 
     # make a plot
@@ -641,20 +689,27 @@ for mva in mvas:
     #ratio_nom.Scale(1./ratio_nom.Integral())
     ratio_nom.Divide(histos_nom_shared[mva])
 
-    # then for JEC Up case
-    ratio_JECUp = histos_JECUp_sep[mva].Clone(mva+"_ratio_JECUp_fit")
-    #ratio_sys.Scale(1./ratio_sys.Integral())
-    ratio_JECUp.Divide(histos_JECUp_shared[mva])
-    # For the JEC Down case
-    ratio_JECDown = histos_JECDown_sep[mva].Clone(mva+"_ratio_JECDown_fit")
-    ratio_JECDown.Divide(histos_JECDown_shared[mva])
-    
-    # For the JER Up case
-    ratio_JERUp = histos_JERUp_sep[mva].Clone(mva+"_ratio_JERUp_fit")
-    ratio_JERUp.Divide(histos_JERUp_shared[mva])
-    # For the JER Down case
-    ratio_JERDown = histos_JERDown_sep[mva].Clone(mva+"_ratio_JERDown_fit")
-    ratio_JERDown.Divide(histos_JERDown_shared[mva])
+#    # then for JEC Up case
+#    ratio_JECUp = histos_JECUp_sep[mva].Clone(mva+"_ratio_JECUp_fit")
+#    #ratio_sys.Scale(1./ratio_sys.Integral())
+#    ratio_JECUp.Divide(histos_JECUp_shared[mva])
+#    # For the JEC Down case
+#    ratio_JECDown = histos_JECDown_sep[mva].Clone(mva+"_ratio_JECDown_fit")
+#    ratio_JECDown.Divide(histos_JECDown_shared[mva])
+#
+#    ratio_095PT = histos_095PT_sep[mva].Clone(mva+"_ratio_095PT_fit")
+#    ratio_095PT.Divide(histos_095PT_shared[mva])
+
+#    ratio_pTScaled = histos_pTScaled_sep[mva].Clone(mva+"_ratio_pTScaled_fit")
+#    ratio_pTScaled.Divide(histos_pTScaled_shared[mva])
+
+#    
+#    # For the JER Up case
+#    ratio_JERUp = histos_JERUp_sep[mva].Clone(mva+"_ratio_JERUp_fit")
+#    ratio_JERUp.Divide(histos_JERUp_shared[mva])
+#    # For the JER Down case
+#    ratio_JERDown = histos_JERDown_sep[mva].Clone(mva+"_ratio_JERDown_fit")
+#    ratio_JERDown.Divide(histos_JERDown_shared[mva])
     
     ratio_FSRUp = None
     ratio_FSRDown = None
@@ -677,17 +732,21 @@ for mva in mvas:
         ratio_ISRDown.Divide(histos_ISRDown_shared[mva])
 
 
-    # Also make plots of difference wrt nominal
-    divratio_JECUp = ratio_JECUp.Clone(mva+"_ratio_JECUp_div_fit")
-    divratio_JECUp.Divide(ratio_nom)
-    divratio_JECDown = ratio_JECDown.Clone(mva+"_ratio_JECDown_div_fit")
-    divratio_JECDown.Divide(ratio_nom)
-    divratio_JERUp = ratio_JERUp.Clone(mva+"_ratio_JERUp_div_fit")
-    divratio_JERUp.Divide(ratio_nom)
-    divratio_JERDown = ratio_JERDown.Clone(mva+"_ratio_JERDown_div_fit")
-    divratio_JERDown.Divide(ratio_nom)
-    divratio_FSRUp = None
-    divratio_FSRDown = None
+#    # Also make plots of difference wrt nominal
+#    divratio_JECUp = ratio_JECUp.Clone(mva+"_ratio_JECUp_div_fit")
+#    divratio_JECUp.Divide(ratio_nom)
+#    divratio_JECDown = ratio_JECDown.Clone(mva+"_ratio_JECDown_div_fit")
+#    divratio_JECDown.Divide(ratio_nom)
+#    divratio_095PT = ratio_095PT.Clone(mva+"_ratio_095PT_div_fit")
+#    divratio_095PT.Divide(ratio_nom)
+#    divratio_pTScaled = ratio_pTScaled.Clone(mva+"_ratio_pTScaled_div_fit")
+#    divratio_pTScaled.Divide(ratio_nom)
+#    divratio_JERUp = ratio_JERUp.Clone(mva+"_ratio_JERUp_div_fit")
+#    divratio_JERUp.Divide(ratio_nom)
+#    divratio_JERDown = ratio_JERDown.Clone(mva+"_ratio_JERDown_div_fit")
+#    divratio_JERDown.Divide(ratio_nom)
+#    divratio_FSRUp = None
+#    divratio_FSRDown = None
     if "201" in year:
         divratio_FSRUp = ratio_FSRUp.Clone(mva+"_ratio_FSRUp_div_fit")
         divratio_FSRUp.Divide(ratio_nom)
@@ -702,64 +761,65 @@ for mva in mvas:
         divratio_ISRDown.Divide(ratio_nom)
 
     outputfile.cd()
-    # Rather than put JECUp and JERUp, construct maximum of the Up and Down variations, but preserve the "sign"
-    mva_JEC = None
-    if "2016" in year:
-        # Use JEC Down
-        mva_JEC = divratio_JECDown.Clone(mva+"_JEC")
-        for i in range(divratio_JECDown.GetNbinsX()):
-            #print i
-            up_value = divratio_JECUp.GetBinContent(i+1)
-            #print "up: " , up_value
-            if up_value>1:
-                up_value = 1/up_value
-            down_value = divratio_JECDown.GetBinContent(i+1)
-            #print "down: " , down_value
-            if down_value>1:
-                down_value = 1/down_value
-            if up_value < down_value:
-                #print "changing value"
-                if divratio_JECUp.GetBinContent(i+1) < 1:
-                    mva_JEC.SetBinContent(i+1,up_value)
-                    #print "to ", up_value
-                else:
-                    mva_JEC.SetBinContent(i+1,1/up_value)
-                    #print "to " , 1/up_value
-    else:
-        mva_JEC = divratio_JECUp.Clone(mva+"_JEC")
-        for i in range(divratio_JECUp.GetNbinsX()):
-            #print i
-            up_value = divratio_JECUp.GetBinContent(i+1)
-            #print "up: " , up_value
-            if up_value<1:
-                up_value = 1/up_value
-            down_value = divratio_JECDown.GetBinContent(i+1)
-            #print "down: " , down_value
-            if down_value<1:
-                down_value = 1/down_value
-            if down_value > up_value:
-                #print "changing value"
-                if divratio_JECUp.GetBinContent(i+1) > 1:
-                    mva_JEC.SetBinContent(i+1,down_value)
-                    #print "to ", down_value
-                else:
-                    mva_JEC.SetBinContent(i+1,1/down_value)
-                    #print "to " , 1/down_value
-
-    mva_JER = divratio_JERUp.Clone(mva+"_JER")  # should be updated to use both if fit succeeds
-    for i in range(divratio_JERUp.GetNbinsX()):
-        up_value = divratio_JERUp.GetBinContent(i+1)
-        if up_value<1:
-            up_value = 1/up_value
-        down_value = divratio_JERDown.GetBinContent(i+1)
-        if down_value<1:
-            down_value = 1/down_value
-        if down_value > up_value:
-            if divratio_JERUp.GetBinContent(i+1) > 1:
-                mva_JER.SetBinContent(i+1,down_value)
-            else:
-                mva_JER.SetBinContent(i+1,1/down_value)
-
+    
+#    # Rather than put JECUp and JERUp, construct maximum of the Up and Down variations, but preserve the "sign"
+#    mva_JEC = None
+#    if "2016" in year:
+#        # Use JEC Down
+#        mva_JEC = divratio_JECDown.Clone(mva+"_JEC")
+#        for i in range(divratio_JECDown.GetNbinsX()):
+#            #print i
+#            up_value = divratio_JECUp.GetBinContent(i+1)
+#            #print "up: " , up_value
+#            if up_value>1:
+#                up_value = 1/up_value
+#            down_value = divratio_JECDown.GetBinContent(i+1)
+#            #print "down: " , down_value
+#            if down_value>1:
+#                down_value = 1/down_value
+#            if up_value < down_value:
+#                #print "changing value"
+#                if divratio_JECUp.GetBinContent(i+1) < 1:
+#                    mva_JEC.SetBinContent(i+1,up_value)
+#                    #print "to ", up_value
+#                else:
+#                    mva_JEC.SetBinContent(i+1,1/up_value)
+#                    #print "to " , 1/up_value
+#    else:
+#        mva_JEC = divratio_JECUp.Clone(mva+"_JEC")
+#        for i in range(divratio_JECUp.GetNbinsX()):
+#            #print i
+#            up_value = divratio_JECUp.GetBinContent(i+1)
+#            #print "up: " , up_value
+#            if up_value<1:
+#                up_value = 1/up_value
+#            down_value = divratio_JECDown.GetBinContent(i+1)
+#            #print "down: " , down_value
+#            if down_value<1:
+#                down_value = 1/down_value
+#            if down_value > up_value:
+#                #print "changing value"
+#                if divratio_JECUp.GetBinContent(i+1) > 1:
+#                    mva_JEC.SetBinContent(i+1,down_value)
+#                    #print "to ", down_value
+#                else:
+#                    mva_JEC.SetBinContent(i+1,1/down_value)
+#                    #print "to " , 1/down_value
+#
+#    mva_JER = divratio_JERUp.Clone(mva+"_JER")  # should be updated to use both if fit succeeds
+#    for i in range(divratio_JERUp.GetNbinsX()):
+#        up_value = divratio_JERUp.GetBinContent(i+1)
+#        if up_value<1:
+#            up_value = 1/up_value
+#        down_value = divratio_JERDown.GetBinContent(i+1)
+#        if down_value<1:
+#            down_value = 1/down_value
+#        if down_value > up_value:
+#            if divratio_JERUp.GetBinContent(i+1) > 1:
+#                mva_JER.SetBinContent(i+1,down_value)
+#            else:
+#                mva_JER.SetBinContent(i+1,1/down_value)
+    
     mva_FSR = None
     if "201" in year:
         mva_FSR = divratio_FSRUp.Clone(mva+"_FSR")
@@ -808,44 +868,55 @@ for mva in mvas:
     if "2016" in year:
         for bin in range(mva_ISR.GetNbinsX()):
             old_value = mva_ISR.GetBinContent(bin+1)
-            diff_value = abs(old_value-1)/math.sqrt(2)
+            #diff_value = abs(old_value-1)/math.sqrt(2)
+            diff_value = abs(old_value-1)
             new_value = 1 + diff_value if (old_value > 1) else 1 - diff_value
             mva_ISR.SetBinContent(bin+1, new_value)
         for bin in range(mva_FSR.GetNbinsX()):
             old_value = mva_FSR.GetBinContent(bin+1)
             diff_value = abs(old_value-1)/math.sqrt(2)
+            diff_value = abs(old_value-1)
             new_value = 1 + diff_value if (old_value > 1) else 1 - diff_value
             mva_FSR.SetBinContent(bin+1, new_value)
 
-    divratio_JECUp.Write(mva+"_JECUp")
-    divratio_JECDown.Write(mva+"_JECDown")
-    divratio_JERUp.Write(mva+"_JERUp")
-    divratio_JERDown.Write(mva+"_JERDown")
-    #mva_JEC.Write(mva+"_JEC")
-    #mva_JER.Write(mva+"_JER")
+#    divratio_JECUp.Write(mva+"_JECUp")
+#    divratio_JECDown.Write(mva+"_JECDown")
+#    divratio_JERUp.Write(mva+"_JERUp")
+#    divratio_JERDown.Write(mva+"_JERDown")
+#    divratio_095PT.Write(mva+"_095PT")
+#    divratio_pTScaled.Write(mva+"_pTScaled")
+#    #mva_JEC.Write(mva+"_JEC")
+#    #mva_JER.Write(mva+"_JER")
+
     if "201" in year:
         mva_FSR.Write(mva+"_FSR")
     if "201" in year:
         mva_ISR.Write(mva+"_ISR")
 
-
     # Also write the shape differences for the no-systematics case to the file
-    ratio_nom.Write(mva+"_nom")
+    #ratio_nom.Write(mva+"_nom")
 
     #diffratio = ratio_sys.Clone(mva+"_ratio_diff_fit")
     #diffratio.Add(ratio_nom, -1)
-    
 
-    plot.makeplot([ratio_nom, ratio_JECUp, ratio_JECDown], ["Nominal", "JEC Up", "JEC Down"], "N_{j}-7", mva+"_fit"+"_comp_JEC", plotdir="./", linear=True, legendColumns=1, 
-    ymin=0.7, ymax=1.3, ylabel="",
-    colors=colors, norm=False, drawstyle="hist")
-
-    plot.makeplot([ratio_nom, ratio_JERUp, ratio_JERDown], ["Nominal", "JER Up", "JER Down"], "N_{j}-7", mva+"_fit"+"_comp_JER", plotdir="./", linear=True, legendColumns=1, 
-    ymin=0.7, ymax=1.3, ylabel="",
-    colors=colors, norm=False, drawstyle="hist")
-    #plot.makeplot([ratio_nom, ratio_JERDown], ["Nominal", "JER Down"], "N_{j}-7", mva+"_fit"+"_comp_JER", plotdir="./", linear=True, legendColumns=1, 
-    #ymin=0.7, ymax=1.3, ylabel="",
-    #colors=colors, norm=False, drawstyle="hist")
+#    plot.makeplot([ratio_nom, ratio_JECUp, ratio_JECDown], ["Nominal", "JEC Up", "JEC Down"], "N_{j}-7", mva+"_fit"+"_comp_JEC", plotdir="./", linear=True, legendColumns=1, 
+#    ymin=0.7, ymax=1.3, ylabel="",
+#    colors=colors, norm=False, drawstyle="hist")
+#
+#    plot.makeplot([ratio_nom, ratio_095PT, ratio_095PT], ["Nominal", "095PT", "095PT"], "N_{j}-7", mva+"_fit"+"_comp_095PT", plotdir="./", linear=True, legendColumns=1, 
+#    ymin=0.7, ymax=1.3, ylabel="",
+#    colors=colors, norm=False, drawstyle="hist")
+#
+#    plot.makeplot([ratio_nom, ratio_pTScaled, ratio_pTScaled], ["Nominal", "pTScaled", "pTScaled"], "N_{j}-7", mva+"_fit"+"_comp_pTScaled", plotdir="./", linear=True, legendColumns=1, 
+#    ymin=0.7, ymax=1.3, ylabel="",
+#    colors=colors, norm=False, drawstyle="hist")
+#
+#    plot.makeplot([ratio_nom, ratio_JERUp, ratio_JERDown], ["Nominal", "JER Up", "JER Down"], "N_{j}-7", mva+"_fit"+"_comp_JER", plotdir="./", linear=True, legendColumns=1, 
+#    ymin=0.7, ymax=1.3, ylabel="",
+#    colors=colors, norm=False, drawstyle="hist")
+#    #plot.makeplot([ratio_nom, ratio_JERDown], ["Nominal", "JER Down"], "N_{j}-7", mva+"_fit"+"_comp_JER", plotdir="./", linear=True, legendColumns=1, 
+#    #ymin=0.7, ymax=1.3, ylabel="",
+#    #colors=colors, norm=False, drawstyle="hist")
 
     if "201" in year:
         plot.makeplot([ratio_nom, ratio_FSRUp, ratio_FSRDown], ["Nominal", "FSR Up", "FSR Down"], "N_{j}-7", mva+"_fit"+"_comp_FSR", plotdir="./", linear=True, legendColumns=1, 
@@ -857,16 +928,25 @@ for mva in mvas:
                       colors=colors, norm=False, drawstyle="hist")
 
     
-    plot.makeplot([divratio_JECUp, divratio_JECDown], ["JEC Up","JEC Down"], "N_{j}-7", mva+"_fit_comp_div_JEC", plotdir="./", linear=True, legendColumns=1, 
-    ymin=0.8, ymax=1.3, ylabel="", dropzeroes=False,
-    colors=colors, norm=False, drawstyle="hist")
+#    plot.makeplot([divratio_JECUp, divratio_JECDown], ["JEC Up","JEC Down"], "N_{j}-7", mva+"_fit_comp_div_JEC", plotdir="./", linear=True, legendColumns=1, 
+#    ymin=0.8, ymax=1.3, ylabel="", dropzeroes=False,
+#    colors=colors, norm=False, drawstyle="hist")
+#
+#    plot.makeplot([divratio_095PT, divratio_095PT], ["095PT","095PT"], "N_{j}-7", mva+"_fit_comp_div_095PT", plotdir="./", linear=True, legendColumns=1, 
+#    ymin=0.8, ymax=1.3, ylabel="", dropzeroes=False,
+#    colors=colors, norm=False, drawstyle="hist")
 
-    plot.makeplot([divratio_JERUp, divratio_JERDown], ["JER Up","JER Down"], "N_{j}-7", mva+"_fit_comp_div_JER", plotdir="./", linear=True, legendColumns=1, 
-    ymin=0.8, ymax=1.3, ylabel="", dropzeroes=False,
-    colors=colors, norm=False, drawstyle="hist")
-    #plot.makeplot([divratio_JERDown], ["JER Down"], "N_{j}-7", mva+"_fit_comp_div_JER", plotdir="./", linear=True, legendColumns=1, 
-    #ymin=0.8, ymax=1.3, ylabel="", dropzeroes=False,
-    #colors=colors, norm=False, drawstyle="hist")
+#    plot.makeplot([divratio_pTScaled, divratio_pTScaled], ["pTScaled","pTScaled"], "N_{j}-7", mva+"_fit_comp_div_pTScaled", plotdir="./", linear=True, legendColumns=1, 
+#    ymin=0.8, ymax=1.3, ylabel="", dropzeroes=False,
+#    colors=colors, norm=False, drawstyle="hist")
+
+#
+#    plot.makeplot([divratio_JERUp, divratio_JERDown], ["JER Up","JER Down"], "N_{j}-7", mva+"_fit_comp_div_JER", plotdir="./", linear=True, legendColumns=1, 
+#    ymin=0.8, ymax=1.3, ylabel="", dropzeroes=False,
+#    colors=colors, norm=False, drawstyle="hist")
+#    #plot.makeplot([divratio_JERDown], ["JER Down"], "N_{j}-7", mva+"_fit_comp_div_JER", plotdir="./", linear=True, legendColumns=1, 
+#    #ymin=0.8, ymax=1.3, ylabel="", dropzeroes=False,
+#    #colors=colors, norm=False, drawstyle="hist")
 
     if "201" in year:
         plot.makeplot([divratio_FSRUp, divratio_FSRDown], ["FSR Up","FSR Down"], "N_{j}-7", mva+"_fit_comp_div_FSR", plotdir="./", linear=True, legendColumns=1, 
@@ -881,13 +961,8 @@ for mva in mvas:
     ymin=0.7, ymax=1.3, ylabel="",
     colors=colors, norm=False, drawstyle="hist")
 
-
     #plot.makeplot([diffratio], ["JEC Up"], "N_{j}-7", mva+"_fit_comp_diff", plotdir="./", linear=True, legendColumns=1, 
     #ymin=-0.2, ymax=0.2, dropzeroes=False, ylabel="",
     #colors=colors, norm=False, drawstyle="hist")
 
-
-
 outputfile.Close()
-
-

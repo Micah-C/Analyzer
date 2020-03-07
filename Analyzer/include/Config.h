@@ -44,29 +44,29 @@ private:
             if     (module=="PartialUnBlinding")           tr.emplaceModule<PartialUnBlinding>();
             else if(module=="PrepNTupleVars")              tr.emplaceModule<PrepNTupleVars>();
             else if(module=="RunTopTagger")                tr.emplaceModule<RunTopTagger>(TopTaggerCfg);
-            else if(module=="Muon")                        tr.emplaceModule<Muon>();
-            else if(module=="Electron")                    tr.emplaceModule<Electron>();
-            else if(module=="Photon")                      tr.emplaceModule<Photon>();
-            else if(module=="Jet")                         tr.emplaceModule<Jet>();
-            else if(module=="BJet")                        tr.emplaceModule<BJet>();
-            else if(module=="CommonVariables")             tr.emplaceModule<CommonVariables>();
-            else if(module=="MakeMVAVariables")            tr.emplaceModule<MakeMVAVariables>();
+            else if(module=="Muon")                        tr.emplaceModule<Muon>("pTScaled");
+            else if(module=="Electron")                    tr.emplaceModule<Electron>("pTScaled");
+            else if(module=="Photon")                      tr.emplaceModule<Photon>("pTScaled");
+            else if(module=="Jet")                         tr.emplaceModule<Jet>("pTScaled");
+            else if(module=="BJet")                        tr.emplaceModule<BJet>("pTScaled");
+            else if(module=="CommonVariables")             tr.emplaceModule<CommonVariables>("pTScaled");
+            else if(module=="MakeMVAVariables")            tr.emplaceModule<MakeMVAVariables>(false, "pTScaled");
             else if(module=="MakeMVAVariables_NonIsoMuon") tr.emplaceModule<MakeMVAVariables>(false, "", "NonIsoMuonJets_pt30");
-            else if(module=="Baseline")                    tr.emplaceModule<Baseline>();
+            else if(module=="Baseline")                    tr.emplaceModule<Baseline>("pTScaled");
             else if(module=="StopGenMatch")                tr.emplaceModule<StopGenMatch>();
             else if(module=="MegaJetCombine")              tr.emplaceModule<MegaJetCombine>();
             else if(module=="MakeMT2Hemispheres_0l")       tr.emplaceModule<MakeMT2Hemispheres>("GoodJets_pt45", "NGoodJets_pt45", "_0l");
             else if(module=="MakeMT2Hemispheres_1l")       tr.emplaceModule<MakeMT2Hemispheres>("GoodJets_pt30", "NGoodJets_pt30", "_1l");
-            else if(module=="DeepEventShape")              tr.emplaceModule<DeepEventShape>(DeepESMCfg, ModelFile);
+            else if(module=="DeepEventShape")              tr.emplaceModule<DeepEventShape>(DeepESMCfg, ModelFile, "Info", true, "pTScaled");
             else if(module=="DeepEventShape_NonIsoMuon")   tr.emplaceModule<DeepEventShape>(DeepESMCfg_NonIsoMuon, ModelFile);
             
             if(runtype == "MC")
             {
-                if     (module=="ScaleFactors")  tr.emplaceModule<ScaleFactors>(runYear, leptonFileName, puFileName, meanFileName);
+                if     (module=="ScaleFactors")  tr.emplaceModule<ScaleFactors>(runYear, leptonFileName, puFileName, meanFileName, "pTScaled");
                 else if(module=="BTagCorrector")
                 {
                     auto& bTagCorrector = tr.emplaceModule<BTagCorrector>(bjetFileName, "", bjetCSVFileName, filetag);
-                    bTagCorrector.SetVarNames("GenParticles_PdgId", "Jets", "GoodJets_pt30", "Jets_bJetTagDeepCSVtotb", "Jets_partonFlavor");
+                    bTagCorrector.SetVarNames("GenParticles_PdgId", "JetspTScaled", "GoodJets_pt30pTScaled", "JetspTScaled_bJetTagDeepCSVtotb", "JetspTScaled_partonFlavor", "pTScaled");
                 }
             }
         }
@@ -140,7 +140,7 @@ public:
             bjetFileName = "allInOne_BTagEff.root";
             bjetCSVFileName = "DeepCSV_102XSF_WP_V1.csv";
             meanFileName = "allInOne_SFMean.root";
-            blind = true;
+            blind = false;
             TopTaggerCfg = "TopTaggerCfg_2018.cfg";
         }
         else if(filetag.find("2018post") != std::string::npos) 
@@ -158,7 +158,7 @@ public:
             bjetFileName = "allInOne_BTagEff.root";
             bjetCSVFileName = "DeepCSV_102XSF_WP_V1.csv";
             meanFileName = "allInOne_SFMean.root";
-            blind = true;
+            blind = false;
             TopTaggerCfg = "TopTaggerCfg_2018.cfg";
         }
 
@@ -297,20 +297,20 @@ public:
         else if (analyzer=="AnalyzeTest")
         {
             const std::vector<std::string> modulesList = {
-                "PrepNTupleVars",
+                //"PrepNTupleVars",
                 "PartialUnBlinding",
-                "PrepNTupleVars",
-                "Muon",
-                "Electron",
-                "Photon",
-                "Jet",
-                "BJet",
-                "CommonVariables",
-                "MakeMVAVariables",
-                "Baseline",
-                "DeepEventShape",
-                "BTagCorrector",
-                "ScaleFactors"
+                //"PrepNTupleVars",
+                //"Muon",
+                //"Electron",
+                //"Photon",
+                //"Jet",
+                ////"BJet",
+                //"CommonVariables",
+                ////"MakeMVAVariables",
+                //"Baseline",
+                ////"DeepEventShape",
+                ////"BTagCorrector",
+                //"ScaleFactors"
             };
             registerModules(tr, std::move(modulesList));
         }

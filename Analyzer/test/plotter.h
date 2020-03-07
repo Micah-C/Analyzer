@@ -43,20 +43,22 @@ public:
     Plotter(HistInfoCollection&& hc, const std::string& outpath = "outputPlots") : hc_(hc), outpath_(outpath){}
     Plotter(std::map< std::string, HistInfoCollection >&& mhc, const std::string& outpath = "outputPlots") : mhc_(mhc), outpath_(outpath) {}
 
-    void plotStack(const std::string& histName, const std::string& xAxisLabel, const std::string& yAxisLabel = "Events", const bool isLogY = false, int rebin = -1, const bool scale = false, const bool doFill = true, const double xmin = 999.9, const double xmax = -999.9, double lumi = 36100)
+    void plotStack(const std::string& histName, const std::string& xAxisLabel, const std::string& yAxisLabel = "Events", const bool isLogY = false, int rebin = -1, const bool scale = false, const bool doFill = true, const double xmin = 999.9, const double xmax = -999.9, double lumi = 36100, double padDiv = 0.3)
     {
         //This is a magic incantation to disassociate opened histograms from their files so the files can be closed
         TH1::AddDirectory(false);
 
         //create the canvas for the plot
-        TCanvas *c = new TCanvas("c1", "c1", 800, 800);
+        TCanvas *c = new TCanvas("c1", "c1", 800, 1600);
         //switch to the canvas to ensure it is the active object
         c->cd();
 
         //----------------------------------------
             // Upper plot will be in pad1: TPad(x1, y1, x2, y2)
-            TPad *pad1 = new TPad("pad1", "pad1", 0.0, 0.31, 1.0, 1.0);
+            TPad *pad1 = new TPad("pad1", "pad1", 0.0, padDiv, 1.0, 1.0);
             pad1->SetBottomMargin(0); // Upper and lower plot are joined
+            pad1->SetLeftMargin(0.12); // Upper and lower plot are joined
+            pad1->SetRightMargin(0.05);
             //pad1->SetGridy();         // Horizontal grid
             pad1->Draw();             // Draw the upper pad: pad1
             pad1->cd();               // pad1 becomes the current pad
@@ -76,16 +78,16 @@ public:
         // -  Setup plots
         // ------------------------
         THStack *bgStack = new THStack();
-        hc_.setUpBG(histName, rebin, bgStack, hbgSum_, doFill, scale);
+        //hc_.setUpBG(histName, rebin, bgStack, hbgSum_, doFill, scale);
         hc_.setUpSignal(histName, rebin);
-        hc_.setUpData(histName, rebin);
+        //hc_.setUpData(histName, rebin);
 
         //create a dummy histogram to act as the axes
         histInfo dummy(new TH1D("dummy", "dummy", 1000, hbgSum_->GetBinLowEdge(1), hbgSum_->GetBinLowEdge(hbgSum_->GetNbinsX()) + hbgSum_->GetBinWidth(hbgSum_->GetNbinsX())));        
 
         //draw dummy axes
         //----------------------------------------
-            dummy.setupAxes(1.2, 1.4, 0.15, 0.15, 0.13, 0.13);
+            dummy.setupAxes(1.2, 1.95, 0.15, 0.15, 0.13, 0.13);
         //----------------------------------------
         dummy.draw();
 
@@ -106,8 +108,8 @@ public:
         {
             leg->AddEntry(entry.h.get(), entry.legEntry.c_str(), legType);
         }
-        smartMax(hbgSum_.get(), leg, static_cast<TPad*>(gPad), min, max, lmax, false);
-        bgStack->Draw("same");
+        //smartMax(hbgSum_.get(), leg, static_cast<TPad*>(gPad), min, max, lmax, false);
+        //bgStack->Draw("same");
 
         // -------------------------
         // -   Plot Signal
@@ -122,39 +124,39 @@ public:
         // ------------------------
         // -  Plot Data
         // ------------------------
-        for(const auto& entry : hc_.dataVec_)
-        {
-            legType = (entry.drawOptions=="hist") ? "L" : entry.drawOptions;
-            leg->AddEntry(entry.h.get(), entry.legEntry.c_str(), legType);
-            smartMax(entry.h.get(), leg, static_cast<TPad*>(gPad), min, max, lmax, true);
-            entry.draw();
-        }
+        //for(const auto& entry : hc_.dataVec_)
+        //{
+        //    legType = (entry.drawOptions=="hist") ? "L" : entry.drawOptions;
+        //    leg->AddEntry(entry.h.get(), entry.legEntry.c_str(), legType);
+        //    smartMax(entry.h.get(), leg, static_cast<TPad*>(gPad), min, max, lmax, true);
+        //    entry.draw();
+        //}
 
         //plot legend
         leg->Draw("same");
 
         //Calculate simple significance      
-        double sig = 0.0;
-        for(int i = 0; i < hc_.sigVec_.at(0).h->GetNbinsX(); i++)   
-        {
-            const double totBG = hbgSum_->GetBinContent(i);
-            const double nSig = hc_.sigVec_.at(0).h->GetBinContent(i);            
-            if(totBG > 1.0 && nSig > 1.0)
-            { 
-                const double s = nSig / sqrt( totBG + pow ( 0.3*totBG, 2) ) ;
-                sig = utility::addInQuad(sig, s);
-            }
-        }
+        //double sig = 0.0;
+        //for(int i = 0; i < hc_.sigVec_.at(0).h->GetNbinsX(); i++)   
+        //{
+        //    const double totBG = hbgSum_->GetBinContent(i);
+        //    const double nSig = hc_.sigVec_.at(0).h->GetBinContent(i);            
+        //    if(totBG > 1.0 && nSig > 1.0)
+        //    { 
+        //        const double s = nSig / sqrt( totBG + pow ( 0.3*totBG, 2) ) ;
+        //        sig = utility::addInQuad(sig, s);
+        //    }
+        //}
 
         TLatex significance;  
         significance.SetNDC(true);
         significance.SetTextAlign(11);
         significance.SetTextFont(52);
         significance.SetTextSize(0.030);
-        significance.DrawLatex(0.099, 0.92, ("Significance = "+std::to_string(sig)).c_str());
+        //significance.DrawLatex(0.099, 0.92, ("Significance = "+std::to_string(sig)).c_str());
 
         //Draw CMS and lumi lables
-        drawLables(lumi);
+        //drawLables(lumi);
             
         //Compute and draw yields for njets min to max
         //drawYields(histName,"njets",12,20);
@@ -170,9 +172,11 @@ public:
         //----------------------------------------            
             // lower plot will be in pad2
             c->cd();          // Go back to the main canvas before defining pad2
-            TPad *pad2 = new TPad("pad2", "pad2", 0.0, 0.0, 1.0, 0.3);
+            TPad *pad2 = new TPad("pad2", "pad2", 0.0, 0.0, 1.0, padDiv);
             pad2->SetTopMargin(0);
-            pad2->SetBottomMargin(0.3);
+            pad2->SetBottomMargin(0.15);
+            pad2->SetRightMargin(0.05);
+            pad2->SetLeftMargin(0.12);
             //pad2->SetGridy(); // Horizontal grid
             pad2->Draw();
             pad2->cd();       // pad2 becomes the current pad        
@@ -180,44 +184,45 @@ public:
             gPad->SetGrid();
                 
             //make ratio dummy
-            histInfo ratioDummy(new TH1D("rdummy", "rdummy", 1000, hc_.bgVec_[0].h->GetBinLowEdge(1), 
-                                         hc_.bgVec_[0].h->GetBinLowEdge(hc_.bgVec_[0].h->GetNbinsX()) + hc_.bgVec_[0].h->GetBinWidth(hc_.bgVec_[0].h->GetNbinsX())));
-            ratioDummy.h->GetXaxis()->SetTitle(xAxisLabel.c_str());
-            //ratioDummy.h->GetYaxis()->SetTitle(yAxisLabel.c_str());
-            //ratioDummy.h->GetYaxis()->SetTitle("Data / BG");
-            ratioDummy.h->GetYaxis()->SetTitle("Ratio");
-            ratioDummy.h->GetXaxis()->SetTickLength(0.1);
-            ratioDummy.h->GetYaxis()->SetTickLength(0.045);
-            ratioDummy.setupAxes(1.2, 0.5, 0.1, 0.1, 0.1, 0.1);
-            ratioDummy.h->GetYaxis()->SetNdivisions(3,5,0);
-            ratioDummy.h->GetXaxis()->SetRangeUser(xmin, xmax);
-            ratioDummy.h->GetYaxis()->SetRangeUser(0.4, 1.6);
-            ratioDummy.h->SetStats(0);
-            //ratioDummy.h->SetMinimum(0.5);
-            //ratioDummy.h->SetMaximum(1.5);
-                
-            //Make ratio histogram for data / background.
-            histInfo ratio((TH1*)hc_.dataVec_[0].h->Clone());
-                    
-            // set pad margins: setupPad(left, right, top, bottom)
-            //ratio.setupPad(0.12, 0.06, 0.0, 0.40);
-                
-            ratio.drawOptions = "ep";
-            ratio.color = kBlack;
-                
-            //ratio.h->SetLineColor(kBlack);
-            //ratio.h->Sumw2();
-            //ratio.h->SetStats(0);
-            ratio.h->Divide(hbgSum_.get());
-            ratio.h->SetMarkerStyle(21);
-                
-            ratioDummy.draw();
-            ratio.draw("same");
-                
-            TF1* line = new TF1("1" ,"1" ,-2000,20000);
-            line->SetLineColor(kRed);
-            line->Draw("same");
-            ratio.draw("same");
+            //histInfo ratioDummy(new TH1D("rdummy", "rdummy", 1000, hc_.bgVec_[0].h->GetBinLowEdge(1), 
+            //                             hc_.bgVec_[0].h->GetBinLowEdge(hc_.bgVec_[0].h->GetNbinsX()) + hc_.bgVec_[0].h->GetBinWidth(hc_.bgVec_[0].h->GetNbinsX())));
+            //ratioDummy.h->GetXaxis()->SetTitle(xAxisLabel.c_str());
+            ////ratioDummy.h->GetYaxis()->SetTitle(yAxisLabel.c_str());
+            ////ratioDummy.h->GetYaxis()->SetTitle("Data / BG");
+            //ratioDummy.h->GetYaxis()->SetTitle("Ratio");
+
+            //ratioDummy.h->GetXaxis()->SetTickLength(0.1);
+            //ratioDummy.h->GetYaxis()->SetTickLength(0.045);
+            //ratioDummy.setupAxes(1.2, 0.5, 0.05, 0.05, 0.05, 0.05);
+            //ratioDummy.h->GetYaxis()->SetNdivisions(3,5,0);
+            //ratioDummy.h->GetXaxis()->SetRangeUser(xmin, xmax);
+            //ratioDummy.h->GetYaxis()->SetRangeUser(0.0, 5.0);
+            //ratioDummy.h->SetStats(0);
+            ////ratioDummy.h->SetMinimum(0.5);
+            ////ratioDummy.h->SetMaximum(1.5);
+            //    
+            ////Make ratio histogram for data / background.
+            //histInfo ratio((TH1*)hc_.dataVec_[0].h->Clone());
+            //        
+            //// set pad margins: setupPad(left, right, top, bottom)
+            ////ratio.setupPad(0.12, 0.06, 0.0, 0.40);
+            //    
+            //ratio.drawOptions = "ep";
+            //ratio.color = kBlack;
+            //    
+            ////ratio.h->SetLineColor(kBlack);
+            ////ratio.h->Sumw2();
+            ////ratio.h->SetStats(0);
+            //ratio.h->Divide(hbgSum_.get());
+            //ratio.h->SetMarkerStyle(21);
+            //    
+            //ratioDummy.draw();
+            //ratio.draw("same");
+            //    
+            //TF1* line = new TF1("1" ,"1" ,-2000,20000);
+            //line->SetLineColor(kRed);
+            //line->Draw("same");
+            //ratio.draw("same");
         //----------------------------------------
         
         //save new plot to file
@@ -758,10 +763,10 @@ public:
     void setupDummy(histInfo dummy, TLegend *leg, const std::string& histName, const std::string& xAxisLabel, const std::string& yAxisLabel, const bool isLogY, 
                     const double xmin, const double xmax, double min, double max, double lmax)
     {
-        dummy.setupAxes(1.2, 1.1, 0.045, 0.045, 0.045, 0.045);
+        dummy.setupAxes(1.2, 1.3, 0.045, 0.045, 0.045, 0.045);
         dummy.h->GetYaxis()->SetTitle(yAxisLabel.c_str());
         dummy.h->GetXaxis()->SetTitle(xAxisLabel.c_str());
-        dummy.h->SetTitle(histName.c_str());
+        dummy.h->SetTitle("");
         //Set the y-range of the histogram
         if(isLogY)
         {

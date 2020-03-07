@@ -315,6 +315,7 @@ if __name__ == "__main__":
         }
 
         TTBar_ISR_FSR_SYS_2016 = {
+<<<<<<< Updated upstream
             "TT_isrUp"             : info.DataSetInfo(basedir=basedir, fileName="2016_TT_isrUp.root",             label="TT_isrUp",             processName="bg", process="0", rate=False, lumiSys="-", scale=-1.0),
             "TT_isrDown"           : info.DataSetInfo(basedir=basedir, fileName="2016_TT_isrDown.root",           label="TT_isrDown",           processName="bg", process="0", rate=False, lumiSys="-", scale=-1.0),
             "TT_fsrUp"             : info.DataSetInfo(basedir=basedir, fileName="2016_TT_fsrUp.root",             label="TT_fsrUp",             processName="bg", process="0", rate=False, lumiSys="-", scale=-1.0),
@@ -325,6 +326,18 @@ if __name__ == "__main__":
             "TT_hdampDown"         : info.DataSetInfo(basedir=basedir, fileName="2016_TT_hdampDown.root",         label="TT_hdampDown",         processName="bg", process="0", rate=False, lumiSys="-", scale=-1.0),
             "TT_underlyingEvtUp"   : info.DataSetInfo(basedir=basedir, fileName="2016_TT_underlyingEvtUp.root",   label="TT_underlyingEvtUp",   processName="bg", process="0", rate=False, lumiSys="-", scale=-1.0),
             "TT_underlyingEvtDown" : info.DataSetInfo(basedir=basedir, fileName="2016_TT_underlyingEvtDown.root", label="TT_underlyingEvtDown", processName="bg", process="0", rate=False, lumiSys="-", scale=-1.0),
+=======
+            "TT_isrUp"    : info.DataSetInfo(basedir=basedir, fileName="2016_TT_isrUp.root",    label="TT_isrUp",    processName="bg", process="0", rate=False, lumiSys="-", scale=-1.0),
+            "TT_isrDown"  : info.DataSetInfo(basedir=basedir, fileName="2016_TT_isrDown.root",  label="TT_isrDown",  processName="bg", process="0", rate=False, lumiSys="-", scale=-1.0),
+            "TT_fsrUp"    : info.DataSetInfo(basedir=basedir, fileName="2016_TT_fsrUp.root",    label="TT_fsrUp",    processName="bg", process="0", rate=False, lumiSys="-", scale=-1.0),
+            "TT_fsrDown"  : info.DataSetInfo(basedir=basedir, fileName="2016_TT_fsrDown.root",  label="TT_fsrDown",  processName="bg", process="0", rate=False, lumiSys="-", scale=-1.0),
+            "TT_isr2Up"   : info.DataSetInfo(basedir=basedir, fileName="2016_TT_isrUp.root",    label="TT_isr2Up",   processName="bg", process="0", rate=False, lumiSys="-", scale=-1.0),
+            "TT_isr2Down" : info.DataSetInfo(basedir=basedir, fileName="2016_TT_isrDown.root",  label="TT_isr2Down", processName="bg", process="0", rate=False, lumiSys="-", scale=-1.0),
+            "TT_fsr2Up"   : info.DataSetInfo(basedir=basedir, fileName="2016_TT_fsrUp.root",    label="TT_fsr2Up",   processName="bg", process="0", rate=False, lumiSys="-", scale=-1.0),
+            "TT_fsr2Down" : info.DataSetInfo(basedir=basedir, fileName="2016_TT_fsrDown.root",  label="TT_fsr2Down", processName="bg", process="0", rate=False, lumiSys="-", scale=-1.0),
+            "TT_MADGRAPH" : info.DataSetInfo(basedir=basedir, fileName="2016_TT_MADGRAPH.root", label="TT_MADGRAPH", processName="bg", process="0", rate=False, lumiSys="-", scale=-1.0),
+
+>>>>>>> Stashed changes
         }
 
     elif options.year== "2017":
@@ -336,12 +349,33 @@ if __name__ == "__main__":
         }
 
         TTBar_SYS_2017 = {
+<<<<<<< Updated upstream
             "TT_095PT"             : info.DataSetInfo(basedir=basedir, fileName="2017_TT_095PT.root",             label="TT_095PT",             processName="bg", process="0", rate=False, lumiSys="-", scale=-1.0),
             "TT_erdOn"             : info.DataSetInfo(basedir=basedir, fileName="2017_TT_erdOn.root",             label="TT_erdOn",             processName="bg", process="0", rate=False, lumiSys="-", scale=-1.0),
             "TT_hdampUp"           : info.DataSetInfo(basedir=basedir, fileName="2017_TT_hdampUp.root",           label="TT_hdampUp",           processName="bg", process="0", rate=False, lumiSys="-", scale=-1.0),
             "TT_hdampDown"         : info.DataSetInfo(basedir=basedir, fileName="2017_TT_hdampDown.root",         label="TT_hdampDown",         processName="bg", process="0", rate=False, lumiSys="-", scale=-1.0),
             "TT_underlyingEvtUp"   : info.DataSetInfo(basedir=basedir, fileName="2017_TT_underlyingEvtUp.root",   label="TT_underlyingEvtUp",   processName="bg", process="0", rate=False, lumiSys="-", scale=-1.0),
             "TT_underlyingEvtDown" : info.DataSetInfo(basedir=basedir, fileName="2017_TT_underlyingEvtDown.root", label="TT_underlyingEvtDown", processName="bg", process="0", rate=False, lumiSys="-", scale=-1.0),
+=======
+            "TT_MADGRAPH"   : info.DataSetInfo(basedir=basedir, fileName="2017_TT_MADGRAPH.root",   label="TT_MADGRAPH",   processName="bg", process="0", rate=False, lumiSys="-", scale=-1.0),
+        }
+
+    elif options.year== "2018pre":
+        sgData = {
+            "RPV_300" : info.DataSetInfo(basedir=basedir, fileName=options.year+"_RPV_2t6j_mStop-300.root",        label="RPV_300", processName="signal", process="0", rate=True, lumiSys="1.05", scale=options.scaleS),
+            "RPV_350" : info.DataSetInfo(basedir=basedir, fileName=options.year+"_RPV_2t6j_mStop-350.root",        label="RPV_350", processName="signal", process="0", rate=True, lumiSys="1.05", scale=options.scaleS),
+            "RPV_400" : info.DataSetInfo(basedir=basedir, fileName=options.year+"_RPV_2t6j_mStop-400.root",        label="RPV_400", processName="signal", process="0", rate=True, lumiSys="1.05", scale=options.scaleS),
+            "RPV_450" : info.DataSetInfo(basedir=basedir, fileName=options.year+"_RPV_2t6j_mStop-450.root",        label="RPV_450", processName="signal", process="0", rate=True, lumiSys="1.05", scale=options.scaleS),
+            "RPV_500" : info.DataSetInfo(basedir=basedir, fileName=options.year+"_RPV_2t6j_mStop-500.root",        label="RPV_500", processName="signal", process="0", rate=True, lumiSys="1.05", scale=options.scaleS),
+            "RPV_550" : info.DataSetInfo(basedir=basedir, fileName=options.year+"_RPV_2t6j_mStop-550.root",        label="RPV_550", processName="signal", process="0", rate=True, lumiSys="1.05", scale=options.scaleS),
+            "RPV_600" : info.DataSetInfo(basedir=basedir, fileName=options.year+"_RPV_2t6j_mStop-600.root",        label="RPV_600", processName="signal", process="0", rate=True, lumiSys="1.05", scale=options.scaleS),
+            "RPV_650" : info.DataSetInfo(basedir=basedir, fileName=options.year+"_RPV_2t6j_mStop-650.root",        label="RPV_650", processName="signal", process="0", rate=True, lumiSys="1.05", scale=options.scaleS),
+            "RPV_700" : info.DataSetInfo(basedir=basedir, fileName=options.year+"_RPV_2t6j_mStop-700.root",        label="RPV_700", processName="signal", process="0", rate=True, lumiSys="1.05", scale=options.scaleS),
+            "RPV_750" : info.DataSetInfo(basedir=basedir, fileName=options.year+"_RPV_2t6j_mStop-750.root",        label="RPV_750", processName="signal", process="0", rate=True, lumiSys="1.05", scale=options.scaleS),
+            "RPV_800" : info.DataSetInfo(basedir=basedir, fileName=options.year+"_RPV_2t6j_mStop-800.root",        label="RPV_800", processName="signal", process="0", rate=True, lumiSys="1.05", scale=options.scaleS),
+            "RPV_850" : info.DataSetInfo(basedir=basedir, fileName=options.year+"_RPV_2t6j_mStop-850.root",        label="RPV_850", processName="signal", process="0", rate=True, lumiSys="1.05", scale=options.scaleS),
+            "RPV_900" : info.DataSetInfo(basedir=basedir, fileName=options.year+"_RPV_2t6j_mStop-900.root",        label="RPV_900", processName="signal", process="0", rate=True, lumiSys="1.05", scale=options.scaleS),
+>>>>>>> Stashed changes
         }
 
     elif options.year== "2018pre":
@@ -353,12 +387,33 @@ if __name__ == "__main__":
         }
 
         TTBar_SYS_2018pre = {
+<<<<<<< Updated upstream
             "TT_095PT"             : info.DataSetInfo(basedir=basedir, fileName="2018pre_TT_095PT.root",             label="TT_095PT",             processName="bg", process="0", rate=False, lumiSys="-", scale=-1.0),
             "TT_erdOn"             : info.DataSetInfo(basedir=basedir, fileName="2018pre_TT_erdOn.root",             label="TT_erdOn",             processName="bg", process="0", rate=False, lumiSys="-", scale=-1.0),
             "TT_hdampUp"           : info.DataSetInfo(basedir=basedir, fileName="2018pre_TT_hdampUp.root",           label="TT_hdampUp",           processName="bg", process="0", rate=False, lumiSys="-", scale=-1.0),
             "TT_hdampDown"         : info.DataSetInfo(basedir=basedir, fileName="2018pre_TT_hdampDown.root",         label="TT_hdampDown",         processName="bg", process="0", rate=False, lumiSys="-", scale=-1.0),
             "TT_underlyingEvtUp"   : info.DataSetInfo(basedir=basedir, fileName="2018pre_TT_underlyingEvtUp.root",   label="TT_underlyingEvtUp",   processName="bg", process="0", rate=False, lumiSys="-", scale=-1.0),
             "TT_underlyingEvtDown" : info.DataSetInfo(basedir=basedir, fileName="2018pre_TT_underlyingEvtDown.root", label="TT_underlyingEvtDown", processName="bg", process="0", rate=False, lumiSys="-", scale=-1.0),
+=======
+            "TT_MADGRAPH"   : info.DataSetInfo(basedir=basedir, fileName="2018pre_TT_MADGRAPH.root",   label="TT_MADGRAPH",  processName="bg", process="0", rate=False, lumiSys="-", scale=-1.0),
+        }
+
+    elif options.year== "2018post":
+        sgData = {
+            "RPV_300" : info.DataSetInfo(basedir=basedir, fileName=options.year+"_RPV_2t6j_mStop-300.root",        label="RPV_300", processName="signal", process="0", rate=True, lumiSys="1.05", scale=options.scaleS),
+            "RPV_350" : info.DataSetInfo(basedir=basedir, fileName=options.year+"_RPV_2t6j_mStop-350.root",        label="RPV_350", processName="signal", process="0", rate=True, lumiSys="1.05", scale=options.scaleS),
+            "RPV_400" : info.DataSetInfo(basedir=basedir, fileName=options.year+"_RPV_2t6j_mStop-400.root",        label="RPV_400", processName="signal", process="0", rate=True, lumiSys="1.05", scale=options.scaleS),
+            "RPV_450" : info.DataSetInfo(basedir=basedir, fileName=options.year+"_RPV_2t6j_mStop-450.root",        label="RPV_450", processName="signal", process="0", rate=True, lumiSys="1.05", scale=options.scaleS),
+            "RPV_500" : info.DataSetInfo(basedir=basedir, fileName=options.year+"_RPV_2t6j_mStop-500.root",        label="RPV_500", processName="signal", process="0", rate=True, lumiSys="1.05", scale=options.scaleS),
+            "RPV_550" : info.DataSetInfo(basedir=basedir, fileName=options.year+"_RPV_2t6j_mStop-550.root",        label="RPV_550", processName="signal", process="0", rate=True, lumiSys="1.05", scale=options.scaleS),
+            "RPV_600" : info.DataSetInfo(basedir=basedir, fileName=options.year+"_RPV_2t6j_mStop-600.root",        label="RPV_600", processName="signal", process="0", rate=True, lumiSys="1.05", scale=options.scaleS),
+            "RPV_650" : info.DataSetInfo(basedir=basedir, fileName=options.year+"_RPV_2t6j_mStop-650.root",        label="RPV_650", processName="signal", process="0", rate=True, lumiSys="1.05", scale=options.scaleS),
+            "RPV_700" : info.DataSetInfo(basedir=basedir, fileName=options.year+"_RPV_2t6j_mStop-700.root",        label="RPV_700", processName="signal", process="0", rate=True, lumiSys="1.05", scale=options.scaleS),
+            "RPV_750" : info.DataSetInfo(basedir=basedir, fileName=options.year+"_RPV_2t6j_mStop-750.root",        label="RPV_750", processName="signal", process="0", rate=True, lumiSys="1.05", scale=options.scaleS),
+            "RPV_800" : info.DataSetInfo(basedir=basedir, fileName=options.year+"_RPV_2t6j_mStop-800.root",        label="RPV_800", processName="signal", process="0", rate=True, lumiSys="1.05", scale=options.scaleS),
+            "RPV_850" : info.DataSetInfo(basedir=basedir, fileName=options.year+"_RPV_2t6j_mStop-850.root",        label="RPV_850", processName="signal", process="0", rate=True, lumiSys="1.05", scale=options.scaleS),
+            "RPV_900" : info.DataSetInfo(basedir=basedir, fileName=options.year+"_RPV_2t6j_mStop-900.root",        label="RPV_900", processName="signal", process="0", rate=True, lumiSys="1.05", scale=options.scaleS),
+>>>>>>> Stashed changes
         }
 
     elif options.year== "2018post":
@@ -370,12 +425,16 @@ if __name__ == "__main__":
         }
 
         TTBar_SYS_2018post = {
+<<<<<<< Updated upstream
             "TT_095PT"             : info.DataSetInfo(basedir=basedir, fileName="2018post_TT_095PT.root",             label="TT_095PT",             processName="bg", process="0", rate=False, lumiSys="-", scale=-1.0),
             "TT_erdOn"             : info.DataSetInfo(basedir=basedir, fileName="2018post_TT_erdOn.root",             label="TT_erdOn",             processName="bg", process="0", rate=False, lumiSys="-", scale=-1.0),
             "TT_hdampUp"           : info.DataSetInfo(basedir=basedir, fileName="2018post_TT_hdampUp.root",           label="TT_hdampUp",           processName="bg", process="0", rate=False, lumiSys="-", scale=-1.0),
             "TT_hdampDown"         : info.DataSetInfo(basedir=basedir, fileName="2018post_TT_hdampDown.root",         label="TT_hdampDown",         processName="bg", process="0", rate=False, lumiSys="-", scale=-1.0),
             "TT_underlyingEvtUp"   : info.DataSetInfo(basedir=basedir, fileName="2018post_TT_underlyingEvtUp.root",   label="TT_underlyingEvtUp",   processName="bg", process="0", rate=False, lumiSys="-", scale=-1.0),
             "TT_underlyingEvtDown" : info.DataSetInfo(basedir=basedir, fileName="2018post_TT_underlyingEvtDown.root", label="TT_underlyingEvtDown", processName="bg", process="0", rate=False, lumiSys="-", scale=-1.0),
+=======
+            "TT_MADGRAPH"   : info.DataSetInfo(basedir=basedir, fileName="2018post_TT_MADGRAPH.root",   label="TT_MADGRAPH", processName="bg", process="0", rate=False, lumiSys="-", scale=-1.0),
+>>>>>>> Stashed changes
         }
 
     dicNoD4 = {
@@ -419,13 +478,21 @@ if __name__ == "__main__":
                             wp.writeHistos(TTBar_ISR_FSR_SYS_2016, basenameIn, basenameOut, bin, sys)                            
                             wp.writeHistosSetBins(Data, "SetBinNoD4", basenameIn, basenameOut, bin, sys, dicNoD4)
                             wp.writeHistosSetBins(Data, "SetBinNoD3D4", basenameIn, basenameOut, bin, sys, dicNoD3D4)
+<<<<<<< Updated upstream
                             wp.writeHistosSetBins(Data, "SetBinNoD1D2D3D4", basenameIn, basenameOut, bin, sys, dicNoD1D2D3D4)                            
+=======
+                            wp.writeHistosSetBins(Data, "SetBinNoD1D2D3D4", basenameIn, basenameOut, bin, sys, dicNoD1D2D3D4)
+>>>>>>> Stashed changes
                         if options.year == "2017":
                             wp.writeHistos(TTBar_SYS_2017, basenameIn, basenameOut, bin, sys)
                         if options.year == "2018pre":
                             wp.writeHistos(TTBar_SYS_2018pre, basenameIn, basenameOut, bin, sys)
                         if options.year == "2018post":
                             wp.writeHistos(TTBar_SYS_2018post, basenameIn, basenameOut, bin, sys)
+<<<<<<< Updated upstream
+=======
+
+>>>>>>> Stashed changes
                         wp.writeStatHistos({"OTHER" : bgData["OTHER"]}, basenameIn, basenameOut, bin, sys)
                         wp.writeStatHistos({"QCD"   : bgData["QCD"]},   basenameIn, basenameOut, bin, sys)
                         wp.writeStatHistos({"TTX"   : bgData["TTX"]}, basenameIn, basenameOut, bin, sys)

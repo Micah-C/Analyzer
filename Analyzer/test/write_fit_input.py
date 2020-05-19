@@ -25,7 +25,16 @@ class WriteNJetPlots:
     def writeHistos(self, data, basenameIn, basenameOut, bin, sys):
         histos = []
         for key, dsi in data.iteritems():
-            h = dsi.getHisto(basenameIn+"_"+bin+sys)
+            h = None
+            try:
+                h = dsi.getHisto(basenameIn+"_"+bin+sys)
+            except:
+                try:
+                    print "    Using \""+basenameIn+"_"+bin+"\" instead"
+                    h = dsi.getHisto(basenameIn+"_"+bin)
+                except:
+                    print "    Didn't find that histo either, the code will now fail"
+                pass
             h.SetName(bin+"_"+dsi.label+"_"+basenameOut+sys)
             h.SetTitle(bin+"_"+dsi.label+"_"+basenameOut+sys)
             h.Write()
@@ -66,14 +75,14 @@ class WriteNJetPlots:
 
     def makePseudoData(self, histos, signalhistos, sgData, basename, bin, sys):
         #make some pseudo_data
-        name = bin+"_pseudodata_"+basename+sys
+        name = bin+"_pseudodata"+sys+"_"+basename
         mynewh = ROOT.TH1D(name, name, histos[0].GetNbinsX(), histos[0].GetBinLowEdge(1), histos[0].GetBinLowEdge(1)+histos[0].GetNbinsX())
 
         #make some pseudo_data with signal
         pseudodataS_histos = []
         for key, dsi in sgData.iteritems():
             sig = dsi.label
-            name = bin+"_pseudodataS_"+sig+"_"+basename+sys
+            name = bin+"_pseudodataS"+sys+"_"+sig+"_"+basename
             pseudodataS_histos.append( ROOT.TH1D(name, name, histos[0].GetNbinsX(), histos[0].GetBinLowEdge(1), histos[0].GetBinLowEdge(1)+histos[0].GetNbinsX()) )
 
         for bin in range(histos[0].GetNbinsX()):
@@ -96,7 +105,7 @@ class WriteNJetPlots:
             h.Write()
 
     def makePseudoData_Func(self, histos, suffix, basename, bin, sys, a0, a1, a2):
-        name = bin+"_pseudodataFunc"+suffix+"_"+basename+sys
+        name = bin+"_pseudodataFunc"+suffix+sys+"_"+basename
         mynewh = ROOT.TH1D(name, name, histos[0].GetNbinsX(), histos[0].GetBinLowEdge(1), histos[0].GetBinLowEdge(1)+histos[0].GetNbinsX())
 
         for bin in range(histos[0].GetNbinsX()):
@@ -216,7 +225,8 @@ if __name__ == "__main__":
     mvaBin = [ "D1", "D2","D3","D4"]
     systypes = ["", "_JECUp", "_JECDown", "_JERUp", "_JERDown", "_btgUp", "_btgDown", "_lepUp", "_lepDown",
                 "_isrUp", "_isrDown", "_fsrUp", "_fsrDown", "_isr2Up", "_isr2Down", "_fsr2Up", "_fsr2Down",
-                "_pdfUp", "_pdfDown", "_htUp", "_htDown", "_puUp", "_puDown", "_sclUp", "_sclDown", "_prfUp", "_prfDown"]
+                "_pdfUp", "_pdfDown", "_htUp", "_htDown", "_puUp", "_puDown", "_sclUp", "_sclDown", "_prfUp", "_prfDown",
+                "_pTScaled"]
     outputfile = ROOT.TFile.Open(outDir + "/" + options.rootFile,"RECREATE")
     outputDataCard = options.dataCard
 
@@ -315,32 +325,24 @@ if __name__ == "__main__":
         }
 
         TTBar_ISR_FSR_SYS_2016 = {
-<<<<<<< Updated upstream
             "TT_isrUp"             : info.DataSetInfo(basedir=basedir, fileName="2016_TT_isrUp.root",             label="TT_isrUp",             processName="bg", process="0", rate=False, lumiSys="-", scale=-1.0),
             "TT_isrDown"           : info.DataSetInfo(basedir=basedir, fileName="2016_TT_isrDown.root",           label="TT_isrDown",           processName="bg", process="0", rate=False, lumiSys="-", scale=-1.0),
             "TT_fsrUp"             : info.DataSetInfo(basedir=basedir, fileName="2016_TT_fsrUp.root",             label="TT_fsrUp",             processName="bg", process="0", rate=False, lumiSys="-", scale=-1.0),
             "TT_fsrDown"           : info.DataSetInfo(basedir=basedir, fileName="2016_TT_fsrDown.root",           label="TT_fsrDown",           processName="bg", process="0", rate=False, lumiSys="-", scale=-1.0),
-            "TT_095PT"             : info.DataSetInfo(basedir=basedir, fileName="2016_TT_095PT.root",             label="TT_095PT",             processName="bg", process="0", rate=False, lumiSys="-", scale=-1.0),
             "TT_erdOn"             : info.DataSetInfo(basedir=basedir, fileName="2016_TT_erdOn.root",             label="TT_erdOn",             processName="bg", process="0", rate=False, lumiSys="-", scale=-1.0),
             "TT_hdampUp"           : info.DataSetInfo(basedir=basedir, fileName="2016_TT_hdampUp.root",           label="TT_hdampUp",           processName="bg", process="0", rate=False, lumiSys="-", scale=-1.0),
             "TT_hdampDown"         : info.DataSetInfo(basedir=basedir, fileName="2016_TT_hdampDown.root",         label="TT_hdampDown",         processName="bg", process="0", rate=False, lumiSys="-", scale=-1.0),
             "TT_underlyingEvtUp"   : info.DataSetInfo(basedir=basedir, fileName="2016_TT_underlyingEvtUp.root",   label="TT_underlyingEvtUp",   processName="bg", process="0", rate=False, lumiSys="-", scale=-1.0),
             "TT_underlyingEvtDown" : info.DataSetInfo(basedir=basedir, fileName="2016_TT_underlyingEvtDown.root", label="TT_underlyingEvtDown", processName="bg", process="0", rate=False, lumiSys="-", scale=-1.0),
-=======
-            "TT_isrUp"    : info.DataSetInfo(basedir=basedir, fileName="2016_TT_isrUp.root",    label="TT_isrUp",    processName="bg", process="0", rate=False, lumiSys="-", scale=-1.0),
-            "TT_isrDown"  : info.DataSetInfo(basedir=basedir, fileName="2016_TT_isrDown.root",  label="TT_isrDown",  processName="bg", process="0", rate=False, lumiSys="-", scale=-1.0),
-            "TT_fsrUp"    : info.DataSetInfo(basedir=basedir, fileName="2016_TT_fsrUp.root",    label="TT_fsrUp",    processName="bg", process="0", rate=False, lumiSys="-", scale=-1.0),
-            "TT_fsrDown"  : info.DataSetInfo(basedir=basedir, fileName="2016_TT_fsrDown.root",  label="TT_fsrDown",  processName="bg", process="0", rate=False, lumiSys="-", scale=-1.0),
-            "TT_isr2Up"   : info.DataSetInfo(basedir=basedir, fileName="2016_TT_isrUp.root",    label="TT_isr2Up",   processName="bg", process="0", rate=False, lumiSys="-", scale=-1.0),
-            "TT_isr2Down" : info.DataSetInfo(basedir=basedir, fileName="2016_TT_isrDown.root",  label="TT_isr2Down", processName="bg", process="0", rate=False, lumiSys="-", scale=-1.0),
-            "TT_fsr2Up"   : info.DataSetInfo(basedir=basedir, fileName="2016_TT_fsrUp.root",    label="TT_fsr2Up",   processName="bg", process="0", rate=False, lumiSys="-", scale=-1.0),
-            "TT_fsr2Down" : info.DataSetInfo(basedir=basedir, fileName="2016_TT_fsrDown.root",  label="TT_fsr2Down", processName="bg", process="0", rate=False, lumiSys="-", scale=-1.0),
-            "TT_MADGRAPH" : info.DataSetInfo(basedir=basedir, fileName="2016_TT_MADGRAPH.root", label="TT_MADGRAPH", processName="bg", process="0", rate=False, lumiSys="-", scale=-1.0),
-
->>>>>>> Stashed changes
         }
 
     elif options.year== "2017":
+        sgData.update({
+            "RPVCP5_350" : info.DataSetInfo(basedir=basedir, fileName=options.year+"_RPV_2t6j_mStop-350_CP5.root", label="RPVCP5_350", processName="signal", process="0", rate=True, lumiSys="1.05", scale=options.scaleS),
+            "RPVCP5_550" : info.DataSetInfo(basedir=basedir, fileName=options.year+"_RPV_2t6j_mStop-550_CP5.root", label="RPVCP5_550", processName="signal", process="0", rate=True, lumiSys="1.05", scale=options.scaleS),
+            "RPVCP5_850" : info.DataSetInfo(basedir=basedir, fileName=options.year+"_RPV_2t6j_mStop-850_CP5.root", label="RPVCP5_850", processName="signal", process="0", rate=True, lumiSys="1.05", scale=options.scaleS),
+            })
+
         binDicData = {
             "D1" : [-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,2.0], 
             "D2" : [-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,2.0],
@@ -349,15 +351,11 @@ if __name__ == "__main__":
         }
 
         TTBar_SYS_2017 = {
-<<<<<<< Updated upstream
-            "TT_095PT"             : info.DataSetInfo(basedir=basedir, fileName="2017_TT_095PT.root",             label="TT_095PT",             processName="bg", process="0", rate=False, lumiSys="-", scale=-1.0),
             "TT_erdOn"             : info.DataSetInfo(basedir=basedir, fileName="2017_TT_erdOn.root",             label="TT_erdOn",             processName="bg", process="0", rate=False, lumiSys="-", scale=-1.0),
             "TT_hdampUp"           : info.DataSetInfo(basedir=basedir, fileName="2017_TT_hdampUp.root",           label="TT_hdampUp",           processName="bg", process="0", rate=False, lumiSys="-", scale=-1.0),
             "TT_hdampDown"         : info.DataSetInfo(basedir=basedir, fileName="2017_TT_hdampDown.root",         label="TT_hdampDown",         processName="bg", process="0", rate=False, lumiSys="-", scale=-1.0),
             "TT_underlyingEvtUp"   : info.DataSetInfo(basedir=basedir, fileName="2017_TT_underlyingEvtUp.root",   label="TT_underlyingEvtUp",   processName="bg", process="0", rate=False, lumiSys="-", scale=-1.0),
             "TT_underlyingEvtDown" : info.DataSetInfo(basedir=basedir, fileName="2017_TT_underlyingEvtDown.root", label="TT_underlyingEvtDown", processName="bg", process="0", rate=False, lumiSys="-", scale=-1.0),
-=======
-            "TT_MADGRAPH"   : info.DataSetInfo(basedir=basedir, fileName="2017_TT_MADGRAPH.root",   label="TT_MADGRAPH",   processName="bg", process="0", rate=False, lumiSys="-", scale=-1.0),
         }
 
     elif options.year== "2018pre":
@@ -387,15 +385,11 @@ if __name__ == "__main__":
         }
 
         TTBar_SYS_2018pre = {
-<<<<<<< Updated upstream
-            "TT_095PT"             : info.DataSetInfo(basedir=basedir, fileName="2018pre_TT_095PT.root",             label="TT_095PT",             processName="bg", process="0", rate=False, lumiSys="-", scale=-1.0),
             "TT_erdOn"             : info.DataSetInfo(basedir=basedir, fileName="2018pre_TT_erdOn.root",             label="TT_erdOn",             processName="bg", process="0", rate=False, lumiSys="-", scale=-1.0),
             "TT_hdampUp"           : info.DataSetInfo(basedir=basedir, fileName="2018pre_TT_hdampUp.root",           label="TT_hdampUp",           processName="bg", process="0", rate=False, lumiSys="-", scale=-1.0),
             "TT_hdampDown"         : info.DataSetInfo(basedir=basedir, fileName="2018pre_TT_hdampDown.root",         label="TT_hdampDown",         processName="bg", process="0", rate=False, lumiSys="-", scale=-1.0),
             "TT_underlyingEvtUp"   : info.DataSetInfo(basedir=basedir, fileName="2018pre_TT_underlyingEvtUp.root",   label="TT_underlyingEvtUp",   processName="bg", process="0", rate=False, lumiSys="-", scale=-1.0),
             "TT_underlyingEvtDown" : info.DataSetInfo(basedir=basedir, fileName="2018pre_TT_underlyingEvtDown.root", label="TT_underlyingEvtDown", processName="bg", process="0", rate=False, lumiSys="-", scale=-1.0),
-=======
-            "TT_MADGRAPH"   : info.DataSetInfo(basedir=basedir, fileName="2018pre_TT_MADGRAPH.root",   label="TT_MADGRAPH",  processName="bg", process="0", rate=False, lumiSys="-", scale=-1.0),
         }
 
     elif options.year== "2018post":
@@ -425,16 +419,11 @@ if __name__ == "__main__":
         }
 
         TTBar_SYS_2018post = {
-<<<<<<< Updated upstream
-            "TT_095PT"             : info.DataSetInfo(basedir=basedir, fileName="2018post_TT_095PT.root",             label="TT_095PT",             processName="bg", process="0", rate=False, lumiSys="-", scale=-1.0),
             "TT_erdOn"             : info.DataSetInfo(basedir=basedir, fileName="2018post_TT_erdOn.root",             label="TT_erdOn",             processName="bg", process="0", rate=False, lumiSys="-", scale=-1.0),
             "TT_hdampUp"           : info.DataSetInfo(basedir=basedir, fileName="2018post_TT_hdampUp.root",           label="TT_hdampUp",           processName="bg", process="0", rate=False, lumiSys="-", scale=-1.0),
             "TT_hdampDown"         : info.DataSetInfo(basedir=basedir, fileName="2018post_TT_hdampDown.root",         label="TT_hdampDown",         processName="bg", process="0", rate=False, lumiSys="-", scale=-1.0),
             "TT_underlyingEvtUp"   : info.DataSetInfo(basedir=basedir, fileName="2018post_TT_underlyingEvtUp.root",   label="TT_underlyingEvtUp",   processName="bg", process="0", rate=False, lumiSys="-", scale=-1.0),
             "TT_underlyingEvtDown" : info.DataSetInfo(basedir=basedir, fileName="2018post_TT_underlyingEvtDown.root", label="TT_underlyingEvtDown", processName="bg", process="0", rate=False, lumiSys="-", scale=-1.0),
-=======
-            "TT_MADGRAPH"   : info.DataSetInfo(basedir=basedir, fileName="2018post_TT_MADGRAPH.root",   label="TT_MADGRAPH", processName="bg", process="0", rate=False, lumiSys="-", scale=-1.0),
->>>>>>> Stashed changes
         }
 
     dicNoD4 = {
@@ -466,11 +455,11 @@ if __name__ == "__main__":
                 basenameOut = "h_njets_" + jettype
                 histos = wp.writeHistos(bgData, basenameIn, basenameOut, bin, sys)
                 signalhistos = wp.writeHistos(sgData, basenameIn, basenameOut, bin, sys)
-                if sys in ["", "_JECUp", "_JECDown", "_JERUp", "_JERDown"]:
+                if sys in ["", "_JECUp", "_JECDown", "_JERUp", "_JERDown", "_pTScaled"]:
                     wp.makePseudoData(histos, signalhistos, sgData, basenameOut, bin, sys)
-                    wp.makePseudoData_Func(histos, "28_24_236", basenameOut, bin, sys, a0=0.28, a1=0.24, a2=0.236)
-                    wp.makePseudoData_Func(histos, "28_24_18",  basenameOut, bin, sys, a0=0.28, a1=0.24, a2=0.18)
-                    wp.makePseudoData_Func(histos, "28_24_-20", basenameOut, bin, sys, a0=0.28, a1=0.24, a2=-0.20)
+                    #wp.makePseudoData_Func(histos, "28_24_236", basenameOut, bin, sys, a0=0.28, a1=0.24, a2=0.236)
+                    #wp.makePseudoData_Func(histos, "28_24_18",  basenameOut, bin, sys, a0=0.28, a1=0.24, a2=0.18)
+                    #wp.makePseudoData_Func(histos, "28_24_-20", basenameOut, bin, sys, a0=0.28, a1=0.24, a2=-0.20)
                     if sys == "":
                         wp.writeHistos(Data, basenameIn, basenameOut, bin, sys)
                         wp.writeHistosSetBins(Data, "SetBin", basenameIn, basenameOut, bin, sys, binDicData)
@@ -478,21 +467,13 @@ if __name__ == "__main__":
                             wp.writeHistos(TTBar_ISR_FSR_SYS_2016, basenameIn, basenameOut, bin, sys)                            
                             wp.writeHistosSetBins(Data, "SetBinNoD4", basenameIn, basenameOut, bin, sys, dicNoD4)
                             wp.writeHistosSetBins(Data, "SetBinNoD3D4", basenameIn, basenameOut, bin, sys, dicNoD3D4)
-<<<<<<< Updated upstream
                             wp.writeHistosSetBins(Data, "SetBinNoD1D2D3D4", basenameIn, basenameOut, bin, sys, dicNoD1D2D3D4)                            
-=======
-                            wp.writeHistosSetBins(Data, "SetBinNoD1D2D3D4", basenameIn, basenameOut, bin, sys, dicNoD1D2D3D4)
->>>>>>> Stashed changes
                         if options.year == "2017":
                             wp.writeHistos(TTBar_SYS_2017, basenameIn, basenameOut, bin, sys)
                         if options.year == "2018pre":
                             wp.writeHistos(TTBar_SYS_2018pre, basenameIn, basenameOut, bin, sys)
                         if options.year == "2018post":
                             wp.writeHistos(TTBar_SYS_2018post, basenameIn, basenameOut, bin, sys)
-<<<<<<< Updated upstream
-=======
-
->>>>>>> Stashed changes
                         wp.writeStatHistos({"OTHER" : bgData["OTHER"]}, basenameIn, basenameOut, bin, sys)
                         wp.writeStatHistos({"QCD"   : bgData["QCD"]},   basenameIn, basenameOut, bin, sys)
                         wp.writeStatHistos({"TTX"   : bgData["TTX"]}, basenameIn, basenameOut, bin, sys)
